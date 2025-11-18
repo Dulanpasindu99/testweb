@@ -128,13 +128,16 @@ export default function MedLinkDoctorDashboard() {
     tests: 'No',
     notes: 'No',
     nextVisit: '05 November 2025',
-    regularDrugs: 'Suger',
+    regularDrugs: ['Metformin', 'Atorvastatin', 'Aspirin'],
   });
 
   const [nextVisitOption, setNextVisitOption] = useState<'TwoWeeks' | 'ThreeWeeks'>('TwoWeeks');
 
   // Per-patient selected history date index in expanded card
-  const visitDateOptions = ['Today', '05/10', '05/09', '05/08', '05/07', '05/06', '05/05', '15/04', '15/04'];
+  const visitDateOptions = useMemo(
+    () => ['Today', '05/10', '05/09', '05/08', '05/07', '05/06', '05/05', '15/04', '15/04'],
+    []
+  );
   const [visitSelection, setVisitSelection] = useState<Record<string, number>>({});
 
   const [rxRows] = useState([
@@ -142,6 +145,14 @@ export default function MedLinkDoctorDashboard() {
     { drug: 'Naproxen', dose: '250MG', terms: '1 DAILY', amount: 2 },
     { drug: 'Acetaminophen', dose: '250MG', terms: '2 Hourly', amount: 3 },
   ]);
+
+  const medicalTests = useMemo(
+    () => [
+      { name: 'Full Blood Count', status: 'Scheduled', note: 'Lab request for tomorrow' },
+      { name: 'Lipid Profile', status: 'Completed', note: 'Reviewed on 05 Oct' },
+    ],
+    []
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -277,7 +288,17 @@ export default function MedLinkDoctorDashboard() {
     console.assert(selected.id === selectedId, 'Selected patient should match selectedId');
     console.assert(gender === selected.gender, 'Gender toggle should reflect selected patient gender');
     console.assert(filtered.length <= patients.length, 'Filtered list cannot be longer than patients');
-  }, [patients, sheet.clinical, timeStr, dateStr, selected, selectedId, gender, filtered.length]);
+  }, [
+    patients,
+    sheet.clinical,
+    timeStr,
+    dateStr,
+    selected,
+    selectedId,
+    gender,
+    filtered.length,
+    visitDateOptions,
+  ]);
 
   return (
     <div className="min-h-screen w-full bg-slate-50 text-slate-900">
@@ -620,20 +641,69 @@ export default function MedLinkDoctorDashboard() {
                     </div>
                   </div>
 
-                  {/* Regular / Medical Tests side */}
-                  <div className="col-span-5">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">Regular Drugs</div>
-                        <div className="mt-2 h-40 rounded-2xl bg-slate-50 ring-1 ring-slate-200" />
+                    {/* Regular / Medical Tests side */}
+                    <div className="col-span-5 space-y-4">
+                      <div className="rounded-2xl bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)] ring-1 ring-slate-200">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">Medical Tests</div>
+                            <div className="text-xs text-slate-500">Upcoming & completed</div>
+                          </div>
+                          <span className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
+                            {medicalTests.length} Tests
+                          </span>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          {medicalTests.map((test) => (
+                            <div
+                              key={test.name}
+                              className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-2 text-sm ring-1 ring-slate-100"
+                            >
+                              <div>
+                                <div className="font-semibold text-slate-900">{test.name}</div>
+                                <div className="text-xs text-slate-500">{test.note}</div>
+                              </div>
+                              <span
+                                className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                                  test.status === 'Completed'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                }`}
+                              >
+                                {test.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 rounded-2xl bg-slate-900/5 px-4 py-2 text-xs text-slate-600">
+                          Previously patient of Dr. Jay
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">Medical Tests</div>
-                        <div className="mt-2 h-40 rounded-2xl bg-slate-50 ring-1 ring-slate-200" />
+
+                      <div className="rounded-2xl bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)] ring-1 ring-slate-200">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">Regular Drugs</div>
+                            <div className="text-xs text-slate-500">Used during last visit</div>
+                          </div>
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            History
+                          </span>
+                        </div>
+                        <div className="mt-4 space-y-2 text-sm font-semibold text-slate-900">
+                          {sheet.regularDrugs.map((drug) => (
+                            <div key={drug} className="rounded-2xl bg-slate-50 px-4 py-2 ring-1 ring-slate-100">
+                              {drug}
+                            </div>
+                          ))}
+                        </div>
+                        <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+                          <span>↪</span> Use same drugs
+                        </button>
+                        <p className="mt-2 text-center text-xs text-slate-500">• Clinical Drugs From previous history</p>
                       </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Row 2: Clinical / Outside tables + mini cards */}
                 <div className="grid grid-cols-12 gap-6 overflow-hidden">
