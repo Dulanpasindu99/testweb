@@ -646,18 +646,18 @@ export default function MedLinkDoctorDashboard() {
                 {/* Row 2: Clinical / Outside tables + mini cards */}
                 <div className="grid grid-cols-12 gap-6 overflow-hidden">
                   {/* Clinical row: table + mini card */}
-                  <div className="col-span-7">
-                    <div className="text-2xl font-semibold text-slate-900">Clinical Drugs</div>
-                    <div className="mt-3 h-full rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                      <div className="grid grid-cols-4 gap-2 text-sm font-semibold text-slate-500">
+                  <div className="col-span-8">
+                    <div className="h-full rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                      <div className="text-2xl font-semibold text-slate-900">Clinical Drugs</div>
+                      <div className="mt-4 grid grid-cols-4 gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                         <div>Drug Name</div>
                         <div>Dose</div>
                         <div>Terms</div>
                         <div>Amount</div>
                       </div>
-                      <div className="mt-1 divide-y divide-slate-200 text-sm text-slate-800">
+                      <div className="mt-2 divide-y divide-slate-100 text-sm text-slate-900">
                         {rxRows.map((r, i) => (
-                          <div key={i} className="grid grid-cols-4 gap-2 py-2">
+                          <div key={i} className="grid grid-cols-4 gap-2 py-3">
                             <div>{r.drug}</div>
                             <div>{r.dose}</div>
                             <div>{(r.terms || '').toString()}</div>
@@ -668,34 +668,34 @@ export default function MedLinkDoctorDashboard() {
                     </div>
                   </div>
 
-                  <div className="col-span-5">
-                    <div className="mt-3 h-full rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 flex flex-col justify-between">
-                      <div className="space-y-1 text-sm text-slate-800">
+                  <div className="col-span-4">
+                    <div className="flex h-full flex-col justify-between rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                      <div className="space-y-2 text-base font-medium text-slate-900">
                         {sheet.clinical.map((c, i) => (
                           <div key={i}>{c}</div>
                         ))}
                       </div>
-                      <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
-                        <button className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 font-semibold text-white shadow-sm">
+                      <div>
+                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
                           <span>↪</span> Use same drugs
                         </button>
-                        <span>From previous history</span>
+                        <p className="mt-2 text-center text-xs text-slate-500">• Clinical Drugs From previous history</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Outside row: table + mini card */}
-                  <div className="col-span-7 mt-6">
-                    <div className="text-2xl font-semibold text-slate-900">Outside Drugs</div>
-                    <div className="mt-3 h-full rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                      <div className="grid grid-cols-4 gap-2 text-sm font-semibold text-slate-500">
+                  <div className="col-span-8">
+                    <div className="h-full rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                      <div className="text-2xl font-semibold text-slate-900">Outside Drugs</div>
+                      <div className="mt-4 grid grid-cols-4 gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                         <div>Drug Name</div>
                         <div>Dose</div>
                         <div>Terms</div>
                         <div>Amount</div>
                       </div>
-                      <div className="mt-1 divide-y divide-slate-200 text-sm text-slate-800">
-                        <div className="grid grid-cols-4 gap-2 py-2">
+                      <div className="mt-2 divide-y divide-slate-100 text-sm text-slate-900">
+                        <div className="grid grid-cols-4 gap-2 py-3">
                           <div>{sheet.outside[0]?.name}</div>
                           <div>{sheet.outside[0]?.dose}</div>
                           <div>{sheet.outside[0]?.terms}</div>
@@ -705,14 +705,14 @@ export default function MedLinkDoctorDashboard() {
                     </div>
                   </div>
 
-                  <div className="col-span-5 mt-6">
-                    <div className="mt-3 h-full rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 flex flex-col justify-between">
-                      <div className="text-sm font-medium text-slate-800">{sheet.outside[0]?.name}</div>
-                      <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
-                        <button className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 font-semibold text-white shadow-sm">
+                  <div className="col-span-4">
+                    <div className="flex h-full flex-col justify-between rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                      <div className="text-base font-semibold text-slate-900">{sheet.outside[0]?.name}</div>
+                      <div>
+                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
                           <span>↪</span> Use same drugs
                         </button>
-                        <span>From previous history</span>
+                        <p className="mt-2 text-center text-xs text-slate-500">• Outside Drugs From previous history</p>
                       </div>
                     </div>
                   </div>
