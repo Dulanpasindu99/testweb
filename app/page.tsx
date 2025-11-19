@@ -185,13 +185,45 @@ export default function MedLinkDoctorDashboard() {
     { drug: 'Acetaminophen', dose: '250MG', terms: '2 Hourly', amount: 3 },
   ]);
 
-  const medicalTests = useMemo(
+  const preSavedTests = useMemo(
     () => [
-      { name: 'F.B.C', status: 'Scheduled', note: 'Collect samples tomorrow morning' },
-      { name: 'ColestarolC', status: 'Completed', note: 'Reviewed on 05 Oct' },
+      'F.B.C',
+      'Colestarol.C',
+      'Lipid Profile',
+      'Thyroid Panel',
+      'D-Dimer',
+      'Vitamin D',
+      'Electrolyte Panel',
+      'MRI Brain',
+      'X-Ray Chest',
+      'Blood Sugar Fasting',
     ],
     []
   );
+
+  const [selectedTests, setSelectedTests] = useState<string[]>(['F.B.C', 'Colestarol.C']);
+  const [testQuery, setTestQuery] = useState('');
+
+  const filteredTestOptions = useMemo(() => {
+    const available = preSavedTests.filter((test) => !selectedTests.includes(test));
+    const q = testQuery.trim().toLowerCase();
+    if (!q) {
+      return available.slice(0, 5);
+    }
+    return available.filter((test) => test.toLowerCase().includes(q));
+  }, [preSavedTests, selectedTests, testQuery]);
+
+  const addMedicalTest = (test: string) => {
+    setSelectedTests((prev) => (prev.includes(test) ? prev : [...prev, test]));
+    setTestQuery('');
+  };
+
+  const handleMedicalTestKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && filteredTestOptions[0]) {
+      event.preventDefault();
+      addMedicalTest(filteredTestOptions[0]);
+    }
+  };
 
   const diseaseQuickTags = useMemo(() => ['Feever', 'Headach'], []);
 
@@ -565,34 +597,40 @@ export default function MedLinkDoctorDashboard() {
 
                   {/* Medical Tests side */}
                   <div className="col-span-5">
-                    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">Medical Tests</div>
-                          <div className="text-xs text-slate-500">Upcoming & completed</div>
-                        </div>
-                        <span className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
-                          {medicalTests.length} Tests
+                    <div className="rounded-3xl border border-slate-100 bg-slate-50/80 p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="text-base font-semibold text-slate-900">Medical Test</div>
+                        <label className="relative flex-1 min-w-[200px]">
+                          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                            🔍
+                          </span>
+                          <input
+                            type="text"
+                            className="h-11 w-full rounded-full border border-transparent bg-white/80 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 shadow-inner shadow-white/40 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                            placeholder="Search test by name"
+                            value={testQuery}
+                            onChange={(event) => setTestQuery(event.target.value)}
+                            onKeyDown={handleMedicalTestKeyDown}
+                            aria-label="Search pre-saved medical tests"
+                          />
+                        </label>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                          {selectedTests.length} Tests
                         </span>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {medicalTests.map((test, index) => (
-                          <button
-                            key={test.name}
-                            type="button"
-                            className={`flex-1 min-w-[140px] rounded-[18px] border px-4 py-3 text-sm font-semibold ${
-                              index === 0
-                                ? 'border-sky-500 bg-sky-500 text-white shadow-[0_10px_25px_rgba(14,165,233,0.35)]'
-                                : 'border-slate-200 bg-slate-50 text-slate-700'
-                            }`}
+                        {selectedTests.map((test) => (
+                          <span
+                            key={test}
+                            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
                           >
-                            <div>{test.name}</div>
-                            <div className="text-[11px] font-medium uppercase tracking-widest opacity-80">
-                              {test.status}
-                            </div>
-                          </button>
+                            {test}
+                          </span>
                         ))}
                       </div>
+                      <p className="mt-4 text-xs text-slate-500">
+                        Type a test name and press Enter to add it to the patient&apos;s order.
+                      </p>
                     </div>
                   </div>
                   </div>
