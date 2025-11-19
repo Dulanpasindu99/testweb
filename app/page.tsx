@@ -14,25 +14,27 @@ interface Patient {
 }
 
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-2xl bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] ring-1 ring-slate-200 ${className}`}>
+  <div
+    className={`rounded-[32px] border border-white/60 bg-white/70 p-0 shadow-[0_25px_55px_rgba(15,23,42,0.08)] backdrop-blur-2xl ${className}`}
+  >
     {children}
   </div>
 );
 
 const SectionTitle = ({ title, sub }: { title: string; sub?: string }) => (
-  <div className="flex items-end justify-between">
-    <h2 className="text-lg font-semibold tracking-tight text-slate-900">{title}</h2>
-    {sub ? <span className="text-xs text-slate-500">{sub}</span> : null}
+  <div className="flex items-baseline justify-between">
+    <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">{title}</h2>
+    {sub ? <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{sub}</span> : null}
   </div>
 );
 
 type IconRenderer = (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
 
 const iconProps = {
-  viewBox: '0 0 24 24',
+  viewBox: '0 0 28 28',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 1.6,
+  strokeWidth: 1.4,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
 } as const;
@@ -85,6 +87,13 @@ const ChatIcon: IconRenderer = (props) => (
   </svg>
 );
 
+const SearchIcon: IconRenderer = (props) => (
+  <svg {...iconProps} {...props}>
+    <circle cx={12} cy={12} r={6.5} />
+    <path d="M18.5 18.5L24 24" />
+  </svg>
+);
+
 const LogoutIcon: IconRenderer = (props) => (
   <svg {...iconProps} {...props}>
     <path d="M15 7l5 5-5 5" />
@@ -103,6 +112,7 @@ export default function MedLinkDoctorDashboard() {
     const id = setInterval(() => setNow(new Date()), 30_000); // update every 30s
     return () => clearInterval(id);
   }, []);
+
   const timeStr = useMemo(
     () => now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
     [now]
@@ -346,248 +356,194 @@ export default function MedLinkDoctorDashboard() {
   ]);
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 text-slate-900">
-      <div className="flex min-h-screen flex-1 flex-col">
-        <main className="mx-auto flex w-full max-w-[1680px] flex-1 overflow-hidden px-8 py-6">
-          {/* Two-column layout: LEFT = detailed sheet, RIGHT = search/list */}
-          <div className="grid h-full w-full grid-cols-12 gap-6">
-          {/* RIGHT: Search + expandable patient list */}
-          <div className="order-2 col-span-4 flex h-full min-h-0 flex-col overflow-hidden pl-1">
-            <Card className="flex h-full min-h-0 flex-col p-4">
-              <SectionTitle title="Search Patients" sub="Name / NIC / Mobile" />
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  placeholder="Search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
-                />
-                <button
-                  className="rounded-xl bg-sky-500 px-3 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-sky-600 active:translate-y-px"
-                  type="button"
-                >
-                  Search
-                </button>
-              </div>
-
-              <div className="mt-4 text-sm font-semibold text-slate-900">Patient List</div>
-              <div className="mt-2 flex-1 space-y-2 overflow-y-auto pr-1 text-sm leading-tight">
-                {filtered.map((p) => {
-                  const isSelected = selectedId === p.id;
-                  const isOpen = expandedId === p.id;
-                  return (
-                    <div
-                      key={p.id}
-                      ref={(el) => {
-                        rowRefs.current[p.id] = el;
-                      }}
-                      className="w-full rounded-2xl border border-slate-200 bg-white/95 shadow-[0_4px_14px_rgba(15,23,42,0.06)]"
-                    >
-                      {/* Row header */}
-                      <div
-                        className={`flex cursor-pointer items-center justify-between px-3 py-2 transition ${
-                          isSelected ? 'bg-sky-50' : 'hover:bg-slate-50'
-                        }`}
-                        onClick={() => {
-                          setSelectedId(p.id);
-                          setGender(p.gender as 'Male' | 'Female');
-                          toggleExpand(p.id);
-                        }}
-                      >
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium text-slate-900">{p.name}</div>
-                          <div className="truncate text-[11px] text-slate-500">{p.nic}</div>
-                          <div className="mt-1 text-[11px] text-slate-500">{p.reason}</div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <div className="text-right text-[11px] text-slate-500">{p.time}</div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedId(p.id);
-                              setGender(p.gender as 'Male' | 'Female');
-                              toggleExpand(p.id);
-                            }}
-                            className="grid size-6 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-700 hover:bg-white"
-                            aria-label={isOpen ? 'Collapse' : 'Expand'}
-                          >
-                            {isOpen ? '–' : '+'}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expanded preview card */}
-                      {isOpen && (
-                        <div className="mx-2 mb-2 rounded-2xl bg-slate-50 px-4 py-4 ring-1 ring-slate-200">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="text-lg font-semibold leading-5 text-slate-900">{p.name}</div>
-                              <div className="text-sm text-slate-600">{p.nic}</div>
-                              <span className="mt-2 inline-block rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white">
-                                Father
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm text-slate-700">
-                                Age{' '}
-                                <span className="text-xl font-semibold text-slate-900">{p.age}</span>
-                              </div>
-                              <span className="mt-1 inline-block rounded-full bg-sky-500 px-2 py-0.5 text-[10px] font-semibold text-white">
-                                {p.gender}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                            {visitDateOptions.map((d, i) => {
-                              const selectedIdx = visitSelection[p.id] ?? 0;
-                              const isActive = i === selectedIdx;
-                              return (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  onClick={() =>
-                                    setVisitSelection((prev) => ({
-                                      ...prev,
-                                      [p.id]: i,
-                                    }))
-                                  }
-                                  className={`rounded-full px-3 py-1 transition ${
-                                    isActive
-                                      ? 'bg-slate-900 text-white shadow-sm'
-                                      : 'bg-white text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  {d}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-4 grid grid-cols-2 gap-6 text-sm text-slate-700">
-                            <div>
-                              <div className="text-base font-semibold text-slate-900">Disease</div>
-                              <div className="mt-1 grid grid-cols-2 gap-2">
-                                <span>Feever</span>
-                                <span>Headach</span>
-                              </div>
-                              <div className="mt-4 text-base font-semibold text-slate-900">Clinical Drugs</div>
-                              <div className="mt-1 space-y-0.5">
-                                <div>Ibuprofen</div>
-                                <div>Naproxen</div>
-                                <div>Acetaminophen</div>
-                              </div>
-                              <div className="mt-4 text-base font-semibold text-slate-900">Outside Drugs</div>
-                              <div className="mt-1">Perasitamol</div>
-                            </div>
-                            <div>
-                              <div className="text-base font-semibold text-slate-900">Medical Tests</div>
-                              <div className="mt-1">No</div>
-                              <div className="mt-4 text-base font-semibold text-slate-900">Special Notes</div>
-                              <div className="mt-1">No</div>
-                              <div className="mt-6 text-base font-semibold text-slate-900">Next Visit Date</div>
-                              <div className="mt-1 text-slate-700">05 November 2025</div>
-                            </div>
-                          </div>
-                          <div className="mt-6">
-                            <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black">
-                              Download as Report
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          </div>
-
-          {/* LEFT: Full detailed sheet */}
-          <div className="order-1 col-span-8 flex h-full min-h-0 flex-col overflow-hidden pr-4">
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] ring-1 ring-slate-200">
-              {/* Patient quick info */}
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    className="flex-1 min-w-[220px] rounded-[999px] border border-slate-200 bg-slate-50 px-5 py-3 text-base font-semibold text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
-                    placeholder="Enter Patient Name"
-                    defaultValue={selected.name}
-                  />
-
-                  <input
-                    className="w-24 rounded-[999px] border border-slate-200 bg-slate-50 px-4 py-3 text-base font-semibold text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
-                    placeholder="Age"
-                    defaultValue={selected.age}
-                  />
-
-                  <div className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    Patient No : MH0001
+    <div className="relative isolate min-h-screen overflow-hidden bg-[#e8edf6] text-slate-900">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 top-[-10%] size-[420px] rounded-full bg-sky-300/35 blur-[160px]" />
+        <div className="absolute right-[-5%] top-16 size-[360px] rounded-full bg-rose-200/35 blur-[160px]" />
+        <div className="absolute bottom-[-15%] left-1/2 size-[520px] -translate-x-1/2 rounded-full bg-indigo-200/25 blur-[200px]" />
+      </div>
+      <div className="relative mx-auto flex w-full max-w-[1700px] gap-10 px-6 py-10">
+        <div className="flex flex-1 flex-col gap-8">
+          <header className="grid grid-cols-12 gap-6">
+            <Card className="col-span-9 p-8">
+              <div className="flex flex-wrap items-center justify-between gap-8">
+                <div>
+                  <p className="text-sm font-medium uppercase tracking-[0.4em] text-slate-500">
+                    Today · {dateStr}
+                  </p>
+                  <h1 className="mt-3 text-4xl font-semibold text-slate-900">MedLink Studio</h1>
+                  <p className="mt-2 text-base text-slate-500">
+                    Monitoring queue with{' '}
+                    <span className="font-semibold text-slate-900">{patients.length} patients</span>
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="rounded-[28px] border border-white/70 bg-white/80 px-5 py-3 text-center shadow-inner shadow-white/60">
+                    <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Local Time</div>
+                    <div className="mt-1 text-3xl font-semibold text-slate-900">{timeStr}</div>
                   </div>
-
-                  <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white">
-                    <span>Previously patient of Dr. Jay</span>
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] tracking-wide">10 SEP 25</span>
+                  <div className="rounded-[28px] border border-white/70 bg-white/80 px-5 py-3 text-center shadow-inner shadow-white/60">
+                    <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Next Visit</div>
+                    <div className="mt-1 text-2xl font-semibold text-slate-900">
+                      {nextVisitOption === 'TwoWeeks' ? 'In 2 Weeks' : 'In 3 Weeks'}
+                    </div>
                   </div>
                 </div>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <span className="rounded-full bg-slate-900/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-white">
+                  Queue Control
+                </span>
+                <span className="rounded-full bg-white/80 px-4 py-1.5 text-xs font-semibold text-slate-600">
+                  New {newPatients}
+                </span>
+                <span className="rounded-full bg-white/80 px-4 py-1.5 text-xs font-semibold text-slate-600">
+                  Existing {existingPatients}
+                </span>
+              </div>
+            </Card>
 
+            <Card className="col-span-3 p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Capacity</p>
+                  <div className="mt-2 flex items-end gap-1">
+                    <span className="text-5xl font-semibold text-slate-900">{occupancy}</span>
+                    <span className="text-sm text-slate-500">/ {CAPACITY}</span>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-inner shadow-white/50">
+                  {occupancyPercent}%
+                </div>
+              </div>
+              <div className="mt-4 h-2 w-full rounded-full bg-white/60">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 shadow-[0_6px_18px_rgba(56,189,248,0.35)]"
+                  style={{ width: `${occupancyPercent}%` }}
+                />
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-3 text-sm text-slate-600">
+                <div className="rounded-2xl bg-white/90 px-3 py-2 text-center shadow-inner shadow-white/40">
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">New</p>
+                  <p className="text-xl font-semibold text-slate-900">{newPatients}</p>
+                </div>
+                <div className="rounded-2xl bg-white/90 px-3 py-2 text-center shadow-inner shadow-white/40">
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Existing</p>
+                  <p className="text-xl font-semibold text-slate-900">{existingPatients}</p>
+                </div>
+              </div>
+            </Card>
+          </header>
+
+          <div className="grid flex-1 grid-cols-12 gap-6">
+            <div className="col-span-8 flex flex-col gap-6">
+              <Card className="space-y-6 p-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">Focused Patient</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-slate-900">{selected.name}</h2>
+                    <p className="text-sm text-slate-500">NIC · {selected.nic}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-slate-700">
+                      ID {selected.id.toUpperCase()}
+                    </span>
+                    <span className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-slate-700">
+                      Age {selected.age}
+                    </span>
+                    <span className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-slate-700">
+                      {selected.gender}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-12 gap-4 text-sm">
+                  <div className="col-span-6">
+                    <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Patient Name</label>
+                    <input
+                      className="mt-2 w-full rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-base font-semibold text-slate-900 shadow-inner shadow-white/50 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                      placeholder="Enter Patient Name"
+                      defaultValue={selected.name}
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Age</label>
+                    <input
+                      className="mt-2 w-full rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-base font-semibold text-slate-900 shadow-inner shadow-white/50 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                      placeholder="Age"
+                      defaultValue={selected.age}
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Patient No</label>
+                    <div className="mt-2 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 shadow-inner shadow-white/40">
+                      MH0001
+                    </div>
+                  </div>
+                  <div className="col-span-6">
+                    <label className="text-xs uppercase tracking-[0.3em] text-slate-500">NIC Number</label>
+                    <input
+                      className="mt-2 w-full rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-base font-semibold text-slate-900 shadow-inner shadow-white/50 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                      placeholder="Enter NIC No"
+                      defaultValue={selected.nic}
+                    />
+                  </div>
+                  <div className="col-span-6">
+                    <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Visit Reason</label>
+                    <div className="mt-2 rounded-[24px] border border-white/70 bg-white/90 px-4 py-3 text-base font-semibold text-slate-900 shadow-inner shadow-white/40">
+                      {selected.reason}
+                    </div>
+                  </div>
+                </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    className="w-52 rounded-[999px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                    placeholder="Enter NIC No"
-                    defaultValue={selected.nic}
-                  />
-
-                  <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-900/90 px-4 py-2 text-xs font-semibold text-white">
+                    Previously patient of Dr. Jay
+                  </span>
+                  <span className="rounded-full bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600">10 SEP 25</span>
+                  <div className="ml-auto flex items-center gap-2 rounded-full bg-white/70 p-1 shadow-inner shadow-white/40">
                     <button
                       type="button"
                       onClick={() => setGender('Male')}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                        gender === 'Male'
-                          ? 'bg-sky-500 text-white shadow-sm'
-                          : 'border border-slate-300 bg-white text-slate-700'
-                      }`}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${gender === 'Male' ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_8px_18px_rgba(56,189,248,0.35)]' : 'text-slate-600'}`}
                     >
                       Male
                     </button>
                     <button
                       type="button"
                       onClick={() => setGender('Female')}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                        gender === 'Female'
-                          ? 'bg-rose-500 text-white shadow-sm'
-                          : 'border border-slate-300 bg-white text-slate-700'
-                      }`}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${gender === 'Female' ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-[0_8px_18px_rgba(244,63,94,0.35)]' : 'text-slate-600'}`}
                     >
                       Female
                     </button>
                   </div>
                 </div>
-              </div>
+              </Card>
 
-              {/* Two-column canvas */}
-              <div className="mt-2 flex-1 overflow-hidden">
-                <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
-                  {/* Row 1: Disease + Regular / Medical Tests */}
+              <Card className="flex-1 overflow-hidden p-0">
+                <div className="flex h-full flex-col gap-6 overflow-y-auto p-6 pr-4">
                   <div className="grid grid-cols-12 gap-6">
-                  {/* Disease side */}
-                  <div className="col-span-7">
-                    <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+                    <div className="col-span-7 rounded-[28px] border border-white/60 bg-white/80 p-5 shadow-inner shadow-white/30">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <div className="text-2xl font-semibold text-slate-900">Disease</div>
-                          <div className="text-xs text-slate-500">Search and pick existing symptoms</div>
+                          <div className="text-xs uppercase tracking-[0.4em] text-slate-400">Search symptoms</div>
                         </div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">History</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">History</div>
                       </div>
                       <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <input
-                          className="min-w-[220px] flex-1 rounded-[999px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                          placeholder="Search Diseases"
-                        />
-                        <button className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 active:translate-y-px">
-                          <span role="img" aria-hidden="true">
-                            🔍
+                        <div className="relative flex-1 min-w-[220px]">
+                          <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                            <SearchIcon className="size-4" />
                           </span>
+                          <input
+                            className="h-12 w-full rounded-full border border-transparent bg-white/90 pl-11 pr-4 text-sm font-medium text-slate-900 shadow-inner shadow-white/60 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                            placeholder="Search Diseases"
+                          />
+                        </div>
+                        <button
+                          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(56,189,248,0.35)]"
+                          type="button"
+                        >
+                          <SearchIcon className="size-4" />
                           Search
                         </button>
                       </div>
@@ -595,7 +551,7 @@ export default function MedLinkDoctorDashboard() {
                         {diseaseQuickTags.map((tag) => (
                           <button
                             key={tag}
-                            className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
+                            className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
                             type="button"
                           >
                             {tag}
@@ -603,67 +559,70 @@ export default function MedLinkDoctorDashboard() {
                         ))}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Medical Tests side */}
-                  <div className="col-span-5">
-                    <div className="rounded-3xl border border-slate-100 bg-slate-50/80 p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                    <div className="col-span-5 rounded-[28px] border border-white/60 bg-white/80 p-5 shadow-inner shadow-white/30">
                       <div className="flex flex-wrap items-center gap-3">
-                        <div className="text-base font-semibold text-slate-900">Medical Test</div>
-                        <label className="relative flex-1 min-w-[200px]">
-                          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                            🔍
-                          </span>
-                          <input
-                            type="text"
-                            className="h-11 w-full rounded-full border border-transparent bg-white/80 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 shadow-inner shadow-white/40 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            placeholder="Search test by name"
-                            value={testQuery}
-                            onChange={(event) => setTestQuery(event.target.value)}
-                            onKeyDown={handleMedicalTestKeyDown}
-                            aria-label="Search pre-saved medical tests"
-                          />
-                        </label>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
-                          {selectedTests.length} Tests
+                        <div className="text-base font-semibold text-slate-900">Medical Tests</div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-inner shadow-white/60">
+                          {selectedTests.length} Saved
                         </span>
                       </div>
+                      <label className="mt-3 flex items-center gap-2 rounded-full border border-transparent bg-white/90 px-4 py-2 shadow-inner shadow-white/40">
+                        <SearchIcon className="size-4 text-slate-400" />
+                        <input
+                          type="text"
+                          className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
+                          placeholder="Search test by name"
+                          value={testQuery}
+                          onChange={(event) => setTestQuery(event.target.value)}
+                          onKeyDown={handleMedicalTestKeyDown}
+                          aria-label="Search pre-saved medical tests"
+                        />
+                      </label>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {selectedTests.map((test) => (
                           <span
                             key={test}
-                            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
+                            className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-inner shadow-white/50"
                           >
                             {test}
                           </span>
                         ))}
                       </div>
-                      <p className="mt-4 text-xs text-slate-500">
-                        Type a test name and press Enter to add it to the patient&apos;s order.
-                      </p>
+                      <div className="mt-4 space-y-2 text-sm text-slate-600">
+                        {filteredTestOptions.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => addMedicalTest(option)}
+                            className="w-full rounded-2xl border border-white/60 bg-white/80 px-4 py-2 text-left font-medium text-slate-700 transition hover:border-sky-200 hover:bg-slate-50"
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-4 text-xs text-slate-500">Tap to add from the curated iOS-style library.</p>
                     </div>
                   </div>
-                  </div>
 
-                  {/* Row 2: Clinical / Outside tables + mini cards */}
-                  <div className="grid grid-cols-12 gap-6 overflow-hidden">
-                  {/* Clinical row: table + mini card */}
-                  <div className="col-span-8">
-                    <div className="h-full rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                  <div className="grid grid-cols-12 gap-6">
+                    <div className="col-span-8 rounded-[32px] border border-white/60 bg-white/80 p-5 shadow-inner shadow-white/30">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="text-2xl font-semibold text-slate-900">Clinical Drugs</div>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">3 items</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-inner shadow-white/50">
+                          3 items
+                        </span>
                       </div>
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-                        <div className="grid grid-cols-4 gap-2 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          <div>Drug Name</div>
+                      <div className="mt-4 overflow-hidden rounded-3xl border border-white/60 bg-white/70">
+                        <div className="grid grid-cols-4 gap-2 bg-white/40 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                          <div>Drug</div>
                           <div>Dose</div>
                           <div>Terms</div>
                           <div>Amount</div>
                         </div>
-                        <div className="divide-y divide-slate-100 text-sm text-slate-900">
+                        <div className="divide-y divide-white/60 text-sm text-slate-900">
                           {rxRows.map((r, i) => (
-                            <div key={i} className="grid grid-cols-4 gap-2 bg-white/80 px-4 py-3 odd:bg-white even:bg-slate-50/60">
+                            <div key={i} className="grid grid-cols-4 gap-2 bg-white/80 px-4 py-3">
                               <div>{r.drug}</div>
                               <div>{r.dose}</div>
                               <div>{(r.terms || '').toString()}</div>
@@ -673,42 +632,39 @@ export default function MedLinkDoctorDashboard() {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="col-span-4">
-                    <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-100 bg-slate-50 p-5">
-                      <div className="space-y-2 text-base font-semibold text-slate-900">
+                    <div className="col-span-4 flex h-full flex-col justify-between rounded-[32px] border border-white/60 bg-white/70 p-5 shadow-inner shadow-white/30">
+                      <div className="space-y-3 text-base font-semibold text-slate-900">
                         {sheet.clinical.map((c, i) => (
-                          <div key={i} className="rounded-2xl bg-white px-4 py-2 text-slate-700 shadow-sm">
+                          <div key={i} className="rounded-2xl bg-white/90 px-4 py-2 text-slate-700 shadow-inner shadow-white/50">
                             {c}
                           </div>
                         ))}
                       </div>
                       <div>
-                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900/90 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.35)]">
                           <span>↪</span> Use same drugs
                         </button>
-                        <p className="mt-2 text-center text-xs text-slate-500">• Clinical Drugs From previous history</p>
+                        <p className="mt-2 text-center text-xs text-slate-500">Clinical drugs from previous history</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Outside row: table + mini card */}
-                  <div className="col-span-8">
-                    <div className="h-full rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                    <div className="col-span-8 rounded-[32px] border border-white/60 bg-white/80 p-5 shadow-inner shadow-white/30">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="text-2xl font-semibold text-slate-900">Outside Drugs</div>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">1 item</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-inner shadow-white/50">
+                          1 item
+                        </span>
                       </div>
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-                        <div className="grid grid-cols-4 gap-2 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          <div>Drug Name</div>
+                      <div className="mt-4 overflow-hidden rounded-3xl border border-white/60 bg-white/70">
+                        <div className="grid grid-cols-4 gap-2 bg-white/40 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                          <div>Drug</div>
                           <div>Dose</div>
                           <div>Terms</div>
                           <div>Amount</div>
                         </div>
-                        <div className="divide-y divide-slate-100 text-sm text-slate-900">
-                          <div className="grid grid-cols-4 gap-2 bg-white px-4 py-3">
+                        <div className="divide-y divide-white/60 text-sm text-slate-900">
+                          <div className="grid grid-cols-4 gap-2 bg-white/80 px-4 py-3">
                             <div>{sheet.outside[0]?.name}</div>
                             <div>{sheet.outside[0]?.dose}</div>
                             <div>{sheet.outside[0]?.terms}</div>
@@ -717,10 +673,8 @@ export default function MedLinkDoctorDashboard() {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="col-span-4">
-                    <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                    <div className="col-span-4 flex h-full flex-col justify-between rounded-[32px] border border-white/60 bg-white/70 p-5 shadow-inner shadow-white/30">
                       <div>
                         <div className="text-sm font-semibold text-slate-500">Outside Drugs</div>
                         <div className="text-2xl font-semibold text-slate-900">{sheet.outside[0]?.name}</div>
@@ -729,101 +683,264 @@ export default function MedLinkDoctorDashboard() {
                         </div>
                       </div>
                       <div>
-                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900/90 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.35)]">
                           <span>↪</span> Use same drugs
                         </button>
-                        <p className="mt-2 text-center text-xs text-slate-500">• Outside Drugs From previous history</p>
+                        <p className="mt-2 text-center text-xs text-slate-500">Outside drugs from previous history</p>
                       </div>
                     </div>
                   </div>
-                  </div>
 
-                  {/* Next Visit Date bar */}
-                  <div className="flex flex-wrap items-center gap-3 rounded-[40px] border border-slate-100 bg-white px-6 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-                    <div className="text-2xl font-semibold text-slate-900">Next Visit Date</div>
-                    <button
-                      type="button"
-                      onClick={() => setNextVisitOption('TwoWeeks')}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                        nextVisitOption === 'TwoWeeks'
-                          ? 'bg-sky-500 text-white shadow-sm'
-                          : 'border border-slate-300 bg-white text-slate-700'
-                      }`}
-                    >
-                      Two Weeks
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setNextVisitOption('ThreeWeeks')}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                        nextVisitOption === 'ThreeWeeks'
-                          ? 'bg-sky-500 text-white shadow-sm'
-                          : 'border border-slate-300 bg-white text-slate-700'
-                      }`}
-                    >
-                      Three Weeks
-                    </button>
-                    <div className="min-w-[220px] rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-800 ring-1 ring-slate-200">
-                      {sheet.nextVisit}
+                  <div className="rounded-[40px] border border-white/60 bg-white/80 px-6 py-5 shadow-inner shadow-white/30">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="text-2xl font-semibold text-slate-900">Next Visit Date</div>
+                      <div className="flex items-center gap-2 rounded-full bg-white/70 p-1 shadow-inner shadow-white/50">
+                        <button
+                          type="button"
+                          onClick={() => setNextVisitOption('TwoWeeks')}
+                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${nextVisitOption === 'TwoWeeks' ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_8px_18px_rgba(56,189,248,0.35)]' : 'text-slate-600'}`}
+                        >
+                          Two Weeks
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNextVisitOption('ThreeWeeks')}
+                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${nextVisitOption === 'ThreeWeeks' ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_8px_18px_rgba(56,189,248,0.35)]' : 'text-slate-600'}`}
+                        >
+                          Three Weeks
+                        </button>
+                      </div>
+                      <div className="min-w-[220px] rounded-full bg-white/90 px-4 py-2 text-sm text-slate-800 shadow-inner shadow-white/40">
+                        {sheet.nextVisit}
+                      </div>
+                      <button className="ml-auto rounded-full bg-gradient-to-r from-slate-900 to-slate-700 px-6 py-3 text-base font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.35)]">
+                        Confirm
+                      </button>
                     </div>
-                    <button className="ml-auto rounded-full bg-sky-500 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-sky-600 active:translate-y-px">
-                      Confirm
-                    </button>
                   </div>
                 </div>
-              </div>
+              </Card>
+            </div>
+
+            <div className="col-span-4 flex flex-col gap-6">
+              <Card className="flex h-full min-h-0 flex-col p-6">
+                <SectionTitle title="Patient Navigator" sub="NAME · NIC · REASON" />
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                      <SearchIcon className="size-4" />
+                    </span>
+                    <input
+                      placeholder="Search"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full rounded-[24px] border border-transparent bg-white/80 px-4 py-3 pl-10 text-sm text-slate-900 shadow-inner shadow-white/50 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                    />
+                  </div>
+                  <button
+                    className="rounded-[24px] bg-slate-900/90 px-4 py-3 text-xs font-medium text-white shadow-[0_10px_25px_rgba(15,23,42,0.35)]"
+                    type="button"
+                    onClick={() => setSearch('')}
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <div className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                  {filtered.length} Patients
+                </div>
+                <div className="mt-3 flex-1 space-y-3 overflow-y-auto pr-1 text-sm leading-tight">
+                  {filtered.map((p) => {
+                    const isSelected = selectedId === p.id;
+                    const isOpen = expandedId === p.id;
+                    const selectedIdx = visitSelection[p.id] ?? 0;
+                    return (
+                      <div
+                        key={p.id}
+                        ref={(el) => {
+                          rowRefs.current[p.id] = el;
+                        }}
+                        className={`rounded-[26px] border border-white/70 bg-white/80 p-4 shadow-inner shadow-white/40 transition ${isSelected ? 'ring-2 ring-sky-200' : ''}`}
+                      >
+                        <div
+                          className="flex cursor-pointer items-center justify-between gap-3"
+                          onClick={() => {
+                            setSelectedId(p.id);
+                            setGender(p.gender as 'Male' | 'Female');
+                            toggleExpand(p.id);
+                          }}
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-base font-semibold text-slate-900">{p.name}</div>
+                            <div className="truncate text-[12px] text-slate-500">{p.nic}</div>
+                            <div className="mt-1 text-[12px] text-slate-500">{p.reason}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 text-[12px] text-slate-500">
+                            <span>{p.time}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedId(p.id);
+                                setGender(p.gender as 'Male' | 'Female');
+                                toggleExpand(p.id);
+                              }}
+                              className="grid size-7 place-items-center rounded-full bg-slate-900/90 text-white shadow-[0_10px_20px_rgba(15,23,42,0.35)]"
+                              aria-label={isOpen ? 'Collapse' : 'Expand'}
+                            >
+                              {isOpen ? '−' : '+'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {isOpen && (
+                          <div className="mt-4 rounded-2xl border border-white/60 bg-white/90 p-4 text-sm text-slate-700 shadow-inner shadow-white/40">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <div className="text-lg font-semibold leading-5 text-slate-900">{p.name}</div>
+                                <div className="text-sm text-slate-600">{p.nic}</div>
+                                <span className="mt-2 inline-block rounded-full bg-slate-900/90 px-3 py-0.5 text-[10px] font-semibold text-white">
+                                  Father
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm text-slate-700">
+                                  Age{' '}
+                                  <span className="text-xl font-semibold text-slate-900">{p.age}</span>
+                                </div>
+                                <span className="mt-1 inline-block rounded-full bg-sky-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                  {p.gender}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                              {visitDateOptions.map((d, i) => {
+                                const isActive = i === selectedIdx;
+                                return (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() =>
+                                      setVisitSelection((prev) => ({
+                                        ...prev,
+                                        [p.id]: i,
+                                      }))
+                                    }
+                                    className={`rounded-full px-3 py-1 transition ${isActive ? 'bg-slate-900/90 text-white shadow-[0_6px_14px_rgba(15,23,42,0.35)]' : 'bg-white text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50'}`}
+                                  >
+                                    {d}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-6 text-sm text-slate-700">
+                              <div>
+                                <div className="text-base font-semibold text-slate-900">Disease</div>
+                                <div className="mt-1 grid grid-cols-2 gap-2">
+                                  <span>Feever</span>
+                                  <span>Headach</span>
+                                </div>
+                                <div className="mt-4 text-base font-semibold text-slate-900">Clinical Drugs</div>
+                                <div className="mt-1 space-y-0.5">
+                                  <div>Ibuprofen</div>
+                                  <div>Naproxen</div>
+                                  <div>Acetaminophen</div>
+                                </div>
+                                <div className="mt-4 text-base font-semibold text-slate-900">Outside Drugs</div>
+                                <div className="mt-1">Perasitamol</div>
+                              </div>
+                              <div>
+                                <div className="text-base font-semibold text-slate-900">Medical Tests</div>
+                                <div className="mt-1">No</div>
+                                <div className="mt-4 text-base font-semibold text-slate-900">Special Notes</div>
+                                <div className="mt-1">No</div>
+                                <div className="mt-6 text-base font-semibold text-slate-900">Next Visit Date</div>
+                                <div className="mt-1 text-slate-700">05 November 2025</div>
+                              </div>
+                            </div>
+                            <div className="mt-6">
+                              <button className="w-full rounded-full bg-slate-900/90 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.35)] transition hover:-translate-y-0.5">
+                                Download as Report
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+
+              <Card className="space-y-5 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Care Capsule</p>
+                    <h3 className="text-2xl font-semibold text-slate-900">{sheet.disease}</h3>
+                  </div>
+                  <span className="rounded-full bg-slate-900/90 px-3 py-1 text-xs font-semibold text-white">{selected.time}</span>
+                </div>
+                <ul className="space-y-3 text-sm text-slate-600">
+                  <li className="rounded-2xl border border-white/60 bg-white/80 px-4 py-2">
+                    Clinical · {sheet.clinical.join(', ')}
+                  </li>
+                  <li className="rounded-2xl border border-white/60 bg-white/80 px-4 py-2">
+                    Outside · {sheet.outside[0]?.name} ({sheet.outside[0]?.dose})
+                  </li>
+                  <li className="rounded-2xl border border-white/60 bg-white/80 px-4 py-2">
+                    Tests · {selectedTests.join(', ') || 'None'}
+                  </li>
+                </ul>
+                <button className="w-full rounded-[26px] bg-gradient-to-r from-slate-900 to-slate-700 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.35)]">
+                  Share to iPad
+                </button>
+              </Card>
             </div>
           </div>
         </div>
-        </main>
+
+        <aside className="sticky top-12 hidden h-fit w-28 flex-col items-center gap-6 xl:flex">
+          <div className="flex flex-col items-center gap-5">
+            <div className="flex size-20 items-center justify-center rounded-[30px] border border-white/60 bg-white/80 text-slate-900 shadow-[0_25px_40px_rgba(15,23,42,0.2)]">
+              <svg {...iconProps} className="size-9">
+                <circle cx={12} cy={8} r={3.5} />
+                <path d="M7 19.5c.7-3.3 3.1-5.5 5-5.5s4.3 2.2 5 5.5" />
+                <path d="M9.5 13h5" />
+              </svg>
+            </div>
+            <div className="h-10 w-px rounded-full bg-white/60" />
+            <div className="flex flex-col items-center rounded-[999px] border border-white/60 bg-white/70 px-4 py-6 text-slate-600 shadow-[0_25px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+              <ul className="flex flex-col items-center gap-4">
+                {navigationItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 ${item.isActive ? 'size-14 bg-slate-900 text-white shadow-[0_18px_32px_rgba(15,23,42,0.35)]' : 'size-12 border border-white/70 bg-white/80 text-slate-500 hover:text-slate-900'}`}
+                      aria-label={item.label}
+                    >
+                      <item.icon className="size-5" />
+                      <span className="pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 shadow-lg transition group-hover:scale-100 group-hover:opacity-100">
+                        {item.label}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="h-10 w-px rounded-full bg-white/60" />
+          </div>
+
+          <button
+            type="button"
+            className="group relative flex size-14 items-center justify-center rounded-full border border-rose-100 bg-white/80 text-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.25)] transition hover:-translate-y-0.5 hover:border-rose-200"
+            aria-label={logoutItem.label}
+          >
+            <logoutItem.icon className="size-5" />
+            <span className="pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-rose-600 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 shadow-lg transition group-hover:scale-100 group-hover:opacity-100">
+              {logoutItem.label}
+            </span>
+          </button>
+        </aside>
       </div>
-
-      <aside className="sticky top-0 flex h-screen w-28 flex-col items-center justify-between bg-transparent py-10">
-        <div className="flex flex-col items-center gap-5">
-          <div className="flex size-20 items-center justify-center rounded-full bg-slate-900 text-white shadow-[0_25px_40px_rgba(15,23,42,0.35)]">
-            <svg {...iconProps} className="size-9">
-              <circle cx={12} cy={8} r={3.5} />
-              <path d="M7 19.5c.7-3.3 3.1-5.5 5-5.5s4.3 2.2 5 5.5" />
-              <path d="M9.5 13h5" />
-            </svg>
-          </div>
-          <div className="h-10 w-px rounded-full bg-slate-200" />
-          <div className="flex flex-col items-center rounded-[999px] border border-slate-100 bg-white/90 px-3 py-6 text-slate-600 shadow-[0_25px_45px_rgba(15,23,42,0.08)] backdrop-blur">
-            <ul className="flex flex-col items-center gap-4">
-              {navigationItems.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 ${
-                      item.isActive
-                        ? 'size-14 bg-slate-800 text-white shadow-[0_18px_32px_rgba(15,23,42,0.35)]'
-                        : 'size-12 bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300'
-                    }`}
-                    aria-label={item.label}
-                  >
-                    <item.icon className="size-5" />
-                    <span className="pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 shadow-lg transition group-hover:scale-100 group-hover:opacity-100">
-                      {item.label}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="h-10 w-px rounded-full bg-slate-200" />
-        </div>
-
-        <button
-          type="button"
-          className="group relative flex size-14 items-center justify-center rounded-full border border-rose-100 bg-white text-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.25)] transition hover:-translate-y-0.5 hover:border-rose-200"
-          aria-label={logoutItem.label}
-        >
-          <logoutItem.icon className="size-5" />
-          <span className="pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-rose-600 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 shadow-lg transition group-hover:scale-100 group-hover:opacity-100">
-            {logoutItem.label}
-          </span>
-        </button>
-      </aside>
     </div>
   );
 }
