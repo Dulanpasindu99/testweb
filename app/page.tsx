@@ -300,12 +300,7 @@ export default function MedLinkDoctorDashboard() {
       {/* Top bar */}
       <header className="shrink-0 border-b border-slate-200/60 bg-slate-50/90 px-8 py-4 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1680px] flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-400">Clinic Overview</p>
-            <div className="text-3xl font-semibold leading-tight text-slate-900">MediHelp - Nugegoda</div>
-            <div className="text-sm text-slate-500">No.10, Abc Street Nugegoda</div>
-            <div className="text-xs text-slate-400">Hotline : +94 11 452 8889</div>
-          </div>
+          <div />
           <div className="rounded-[999px] bg-gradient-to-r from-white via-slate-50 to-slate-100 p-[1px] shadow-[0_15px_45px_rgba(15,23,42,0.12)]">
             <div className="flex items-center gap-3 rounded-[999px] border border-white/60 bg-white/95 px-6 py-3">
               <div>
