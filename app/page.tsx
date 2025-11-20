@@ -271,25 +271,6 @@ export default function MedLinkDoctorDashboard() {
 
   const diseaseQuickTags = useMemo(() => ['Fever', 'Headache'], []);
 
-  const vitals = useMemo(
-    () => [
-      { label: 'Blood Pressure', value: '118 / 76 mmHg' },
-      { label: 'Heart Rate', value: '74 bpm' },
-      { label: 'Temperature', value: '98.6°F' },
-      { label: 'SpO₂', value: '98%' },
-    ],
-    []
-  );
-
-  const allergies = useMemo(
-    () => [
-      { label: 'Penicillin', severity: 'High' },
-      { label: 'Peanuts', severity: 'Medium' },
-      { label: 'Latex', severity: 'Low' },
-    ],
-    []
-  );
-
   const searchMatches = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return [];
@@ -469,8 +450,8 @@ export default function MedLinkDoctorDashboard() {
           {/* Two-column layout: LEFT = detailed sheet, RIGHT = search/list */}
           <div className="grid h-full w-full grid-cols-12 gap-6">
           {/* RIGHT: Search + standalone patient suggestion box */}
-          <div className="order-2 col-span-4 flex h-full min-h-0 flex-col overflow-hidden pl-1">
-            <Card className="flex h-full min-h-0 flex-col p-5">
+          <div className="order-2 col-span-4 flex h-full min-h-0 flex-col gap-4 overflow-y-auto pl-1 pr-1">
+            <Card className="flex min-h-0 flex-col p-5">
               <SectionTitle title="Search Patients" sub="Name / NIC" />
               <div className="mt-4 rounded-2xl bg-slate-50/70 p-4 ring-1 ring-white/60">
                 <div className="relative">
@@ -517,6 +498,7 @@ export default function MedLinkDoctorDashboard() {
                 )}
               </div>
             </Card>
+
           </div>
 
           {/* LEFT: Full detailed sheet */}
@@ -584,79 +566,8 @@ export default function MedLinkDoctorDashboard() {
                 </div>
               </div>
 
-              {/* Critical info first: vitals & allergies */}
-              <div className="mt-4 grid grid-cols-12 gap-4">
-                <div className="col-span-8">
-                  <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xl font-bold text-slate-900">Patient Vitals</div>
-                      <span className="rounded-full bg-sky-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-sky-700 ring-1 ring-sky-100">
-                        Live
-                      </span>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                      {vitals.map((item) => (
-                        <div
-                          key={item.label}
-                          className="rounded-2xl bg-slate-50/70 px-4 py-3 shadow-[inset_0_1px_0_rgba(148,163,184,0.3)] ring-1 ring-white"
-                        >
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6b7280]">
-                            {item.label}
-                          </div>
-                          <div className="mt-1 text-lg font-bold text-slate-900">{item.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-span-4">
-                  <div className="flex h-full flex-col gap-3 rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xl font-bold text-slate-900">Allergies & Alerts</div>
-                      <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-rose-600 ring-1 ring-rose-100">
-                        Critical
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {allergies.map((allergy) => {
-                        const badgeStyles =
-                          allergy.severity === 'High'
-                            ? 'bg-rose-50 text-rose-700 ring-rose-100'
-                            : allergy.severity === 'Medium'
-                              ? 'bg-amber-50 text-amber-700 ring-amber-100'
-                              : 'bg-emerald-50 text-emerald-700 ring-emerald-100';
-                        return (
-                          <div
-                            key={allergy.label}
-                            className="flex items-center justify-between rounded-2xl bg-slate-50/80 px-4 py-3 text-sm text-slate-800 ring-1 ring-white"
-                          >
-                            <div>
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">Allergy</div>
-                              <div className="text-base font-semibold text-slate-900">{allergy.label}</div>
-                            </div>
-                            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${badgeStyles}`}>
-                              <span
-                                className={`inline-flex size-2 rounded-full ${
-                                  allergy.severity === 'High'
-                                    ? 'bg-rose-500'
-                                    : allergy.severity === 'Medium'
-                                      ? 'bg-amber-500'
-                                      : 'bg-emerald-500'
-                                }`}
-                              />
-                              {allergy.severity}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">Status Colors: Green = Active · Red/Orange = Allergy</p>
-                  </div>
-                </div>
-              </div>
-
               {/* Two-column canvas */}
-              <div className="mt-3 flex-1 overflow-hidden">
+              <div className="mt-4 flex-1 overflow-hidden">
                 <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
                   {/* Row 1: Disease + Regular / Medical Tests */}
                   <div className="grid grid-cols-12 gap-6">
