@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-
-// ---- Types ----
-interface Patient {
-  id: string;
-  name: string;
-  nic: string;
-  time: string;
-  reason: string;
-  age: number;
-  gender: string;
-}
+import { useRouter } from 'next/navigation';
+import {
+  CLINICAL_DRUGS,
+  DISEASE_QUICK_TAGS,
+  NEXT_VISIT,
+  NOTES,
+  OUTSIDE_DRUGS,
+  PATIENTS,
+  RX_ROWS,
+  SELECTED_TESTS,
+  type Patient,
+} from './patient-data';
 
 const SHADOWS = {
   card: 'shadow-[0_18px_42px_rgba(28,63,99,0.08)]',
@@ -24,9 +25,7 @@ const SHADOWS = {
 } as const;
 
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div
-    className={`rounded-[24px] border border-white/70 bg-white/80 ${SHADOWS.card} ring-1 ring-sky-50/60 backdrop-blur-xl ${className}`}
-  >
+  <div className={`rounded-[24px] border border-white/70 bg-white/80 ${SHADOWS.card} ring-1 ring-sky-50/60 backdrop-blur-xl ${className}`}>
     {children}
   </div>
 );
@@ -125,6 +124,7 @@ const LogoutIcon: IconRenderer = (props) => (
 export default function MedLinkDoctorDashboard() {
   // ------ Constants ------
   const CAPACITY = 40; // soft cap used to render the compact capacity meter
+  const router = useRouter();
 
   // ------ Clock (used only for internal tests, not rendered) ------
   const [now, setNow] = useState<Date>(new Date());
@@ -138,103 +138,23 @@ export default function MedLinkDoctorDashboard() {
   );
   const dateStr = useMemo(() => now.toLocaleDateString('en-US'), [now]);
 
-  // ------ Demo Data ------
-  const patients = useMemo<Patient[]>(
-    () => [
-      {
-        id: 'p1',
-        name: 'Premadasa',
-        nic: '61524862V',
-        time: '5.00 PM',
-        reason: 'Fever, Headache',
-        age: 66,
-        gender: 'Male',
-      },
-      {
-        id: 'p2',
-        name: 'JR Jayawardhana',
-        nic: '64524862V',
-        time: '5.10 PM',
-        reason: 'Stomach Ache, Headache',
-        age: 62,
-        gender: 'Male',
-      },
-      {
-        id: 'p3',
-        name: 'Mitreepala Siirisena',
-        nic: '78522862V',
-        time: '5.20 PM',
-        reason: 'Fever',
-        age: 68,
-        gender: 'Male',
-      },
-      {
-        id: 'p4',
-        name: 'Chandrika Bandranayake',
-        nic: '71524862V',
-        time: '5.30 PM',
-        reason: 'Fever, Headache',
-        age: 63,
-        gender: 'Female',
-      },
-      {
-        id: 'p5',
-        name: 'Ranil Vicramasinghe',
-        nic: '77524862V',
-        time: '5.00 PM',
-        reason: 'Fever, Headache',
-        age: 76,
-        gender: 'Male',
-      },
-      {
-        id: 'p6',
-        name: 'Mahinda Rajapakshe',
-        nic: '74524862V',
-        time: '—',
-        reason: 'Headache',
-        age: 66,
-        gender: 'Male',
-      },
-    ],
-    []
-  );
+  const patients = useMemo<Patient[]>(() => PATIENTS, []);
 
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState('p6');
 
   const [patientName, setPatientName] = useState('');
   const [patientAge, setPatientAge] = useState('');
   const [nicNumber, setNicNumber] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female'>('Male');
-  // track expanded patient rows (accordion-style) - only one open at a time
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
-  };
-
-  // keep refs to each patient row so we can scroll into view when expanded
-  const rowRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-  const listRef = React.useRef<HTMLDivElement | null>(null);
-
-  // when a row expands, scroll it into view (inside the list only)
-  useEffect(() => {
-    if (!expandedId) return;
-    const el = rowRefs.current[expandedId];
-    const listEl = listRef.current;
-    if (el && listEl) {
-      const top = el.offsetTop - listEl.offsetTop;
-      listEl.scrollTo({ top, behavior: 'smooth' });
-    }
-  }, [expandedId]);
 
   // Right sheet editable state
   const [sheet] = useState({
     disease: 'Fever',
-    clinical: ['Ibuprofen', 'Naproxen', 'Acetaminophen'],
-    outside: [{ name: 'Paracetamol', dose: '250MG', terms: 'Hourly', amount: 32 }],
+    clinical: CLINICAL_DRUGS,
+    outside: OUTSIDE_DRUGS,
     tests: 'No',
-    notes: 'No',
-    nextVisit: '05 November 2025',
+    notes: NOTES,
+    nextVisit: NEXT_VISIT,
   });
 
   const [nextVisitOption, setNextVisitOption] = useState<'TwoWeeks' | 'ThreeWeeks'>('TwoWeeks');
@@ -244,13 +164,7 @@ export default function MedLinkDoctorDashboard() {
     () => ['Today', '05/10', '05/09', '05/08', '05/07', '05/06', '05/05', '15/04', '15/04'],
     []
   );
-  const [visitSelection, setVisitSelection] = useState<Record<string, number>>({});
-
-  const [rxRows] = useState([
-    { drug: 'Ibuprofen', dose: '250MG', terms: '1 DAILY', amount: 2 },
-    { drug: 'Naproxen', dose: '250MG', terms: '1 DAILY', amount: 2 },
-    { drug: 'Acetaminophen', dose: '250MG', terms: '2 Hourly', amount: 3 },
-  ]);
+  const [rxRows] = useState(RX_ROWS);
 
   const preSavedTests = useMemo(
     () => [
@@ -268,7 +182,7 @@ export default function MedLinkDoctorDashboard() {
     []
   );
 
-  const [selectedTests, setSelectedTests] = useState<string[]>(['F.B.C', 'Cholesterol']);
+  const [selectedTests, setSelectedTests] = useState<string[]>(SELECTED_TESTS);
   const [testQuery, setTestQuery] = useState('');
 
   const filteredTestOptions = useMemo(() => {
@@ -292,7 +206,7 @@ export default function MedLinkDoctorDashboard() {
     }
   };
 
-  const diseaseQuickTags = useMemo(() => ['Fever', 'Headache'], []);
+  const diseaseQuickTags = useMemo(() => DISEASE_QUICK_TAGS, []);
 
   const vitals = useMemo(
     () => [
@@ -313,14 +227,11 @@ export default function MedLinkDoctorDashboard() {
     []
   );
 
-  const filtered = useMemo(() => {
+  const searchMatches = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return patients;
+    if (!q) return [];
     return patients.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.nic.toLowerCase().includes(q) ||
-        p.reason.toLowerCase().includes(q)
+      (p) => p.name.toLowerCase().includes(q) || p.nic.toLowerCase().includes(q)
     );
   }, [patients, search]);
 
@@ -375,22 +286,23 @@ export default function MedLinkDoctorDashboard() {
     console.assert(typeof timeStr === 'string' && timeStr.length > 0, 'timeStr should be defined');
     console.assert(typeof dateStr === 'string' && dateStr.length > 0, 'dateStr should be defined');
 
-    // Extra tests
-    console.assert(filtered.length <= patients.length, 'Filtered list cannot be longer than patients');
   }, [
     patients,
     sheet.clinical,
     timeStr,
     dateStr,
-    selectedId,
     gender,
-    filtered.length,
     visitDateOptions,
     occupancy,
     occupancyPercent,
     newPatients,
     existingPatients,
   ]);
+
+  const handleSearchSelect = (patient: Patient) => {
+    setSearch(patient.name);
+    router.push(`/patient/${patient.id}`);
+  };
 
   return (
     <div className="relative flex min-h-screen w-full bg-[#f9fafb] text-slate-900">
@@ -400,182 +312,53 @@ export default function MedLinkDoctorDashboard() {
         <main className="mx-auto flex w-full max-w-[1680px] flex-1 overflow-hidden">
           {/* Two-column layout: LEFT = detailed sheet, RIGHT = search/list */}
           <div className="grid h-full w-full grid-cols-12 gap-6">
-          {/* RIGHT: Search + expandable patient list */}
+          {/* RIGHT: Search + standalone patient suggestion box */}
           <div className="order-2 col-span-4 flex h-full min-h-0 flex-col overflow-hidden pl-1">
             <Card className="flex h-full min-h-0 flex-col p-5">
-              <SectionTitle title="Search Patients" sub="Name / NIC / Mobile" />
-              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-slate-50/70 px-3 py-3 ring-1 ring-white/60">
-                <div className="relative flex-1">
-                  <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <SectionTitle title="Search Patients" sub="Name / NIC" />
+              <div className="mt-4 rounded-2xl bg-slate-50/70 p-4 ring-1 ring-white/60">
+                <div className="relative">
+                  <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                   <input
-                    placeholder="Search by name, NIC or reason"
+                    placeholder="Search by name or NIC"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className={`w-full rounded-xl border border-transparent bg-white px-9 py-2.5 pr-12 text-sm text-slate-900 ${SHADOWS.inset} outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100`}
+                    className={`w-full rounded-2xl border border-transparent bg-white px-11 py-3 text-sm text-slate-900 ${SHADOWS.inset} outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100`}
                   />
-                  <MicIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <MicIcon className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                 </div>
-                <button
-                  className={`grid size-11 place-items-center rounded-full bg-sky-500 text-white ${SHADOWS.primaryGlow} transition hover:bg-sky-600 active:translate-y-px`}
-                  type="button"
-                  aria-label="Search"
-                >
-                  <SearchIcon className="size-4" />
-                </button>
-              </div>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Start typing to search by patient name or NIC. Matching patients will appear below.
+                </p>
 
-              <div className="mt-5 flex items-center justify-between text-sm font-semibold text-slate-900">
-                <span>Patient List</span>
-                <span className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                  <span className="inline-flex size-2 rounded-full bg-emerald-400" /> {filtered.length} active
-                </span>
-              </div>
-              <div ref={listRef} className="mt-3 flex-1 space-y-3 overflow-y-auto pr-1 text-sm leading-tight">
-                {filtered.map((p) => {
-                  const isSelected = selectedId === p.id;
-                  const isOpen = expandedId === p.id;
-                  return (
-                    <div
-                      key={p.id}
-                      ref={(el) => {
-                        rowRefs.current[p.id] = el;
-                      }}
-                      className={`relative w-full overflow-hidden rounded-2xl border border-slate-100/90 bg-white/95 backdrop-blur-sm shadow-[0_14px_34px_rgba(14,116,144,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_46px_rgba(14,116,144,0.18)] ${
-                        isSelected ? 'ring-2 ring-sky-300/70' : 'ring-1 ring-slate-200/90'
-                      }`}
-                    >
-                      <div
-                        aria-hidden
-                        className={`absolute inset-y-0 left-0 w-1 ${
-                          isSelected ? 'bg-sky-200' : 'bg-slate-100'
-                        }`}
-                      />
-                      {/* Row header */}
-                      <div
-                        className={`flex cursor-pointer items-center justify-between px-4 py-3 transition ${
-                          isSelected ? 'bg-sky-50/70' : 'hover:bg-slate-50'
-                        }`}
-                        onClick={() => {
-                          setSelectedId(p.id);
-                          toggleExpand(p.id);
-                        }}
-                      >
-                        <div className="min-w-0 space-y-0.5">
-                          <div className="truncate text-sm font-semibold text-slate-900">{p.name}</div>
-                          <div className="truncate text-[11px] text-slate-500">{p.nic}</div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                            <span className="inline-flex size-2 rounded-full bg-emerald-400" />
-                            <span className="truncate">{p.reason}</span>
+                {search && (
+                  <div className="mt-4 space-y-2 rounded-2xl bg-white/90 p-3 ring-1 ring-slate-200">
+                    {searchMatches.length === 0 ? (
+                      <p className="text-sm font-semibold text-slate-500">No matching patients found.</p>
+                    ) : (
+                      searchMatches.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleSearchSelect(p)}
+                          className="flex w-full items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-left text-sm text-slate-800 ring-1 ring-slate-100 transition hover:-translate-y-px hover:bg-sky-50 hover:ring-sky-200"
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold text-slate-900">{p.name}</div>
+                            <div className="truncate text-[11px] text-slate-500">{p.nic}</div>
                           </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-white/70">
-                            {p.time}
+                          <div className="flex flex-col items-end gap-1 text-[11px] font-semibold text-slate-500">
+                            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">
+                              <span className="size-2 rounded-full bg-emerald-400" />
+                              {p.reason}
+                            </span>
+                            <span className="rounded-full bg-slate-900 px-3 py-1 text-white">{p.time}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedId(p.id);
-                              toggleExpand(p.id);
-                            }}
-                            className={`grid size-7 place-items-center rounded-full border border-slate-200 bg-white text-xs text-slate-700 ${SHADOWS.inset} transition hover:bg-slate-50`}
-                            aria-label={isOpen ? 'Collapse' : 'Expand'}
-                          >
-                            {isOpen ? '–' : '+'}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expanded preview card */}
-                      {isOpen && (
-                        <div className="mx-2 mb-2 rounded-2xl bg-gradient-to-b from-sky-50/90 via-white to-white px-4 py-4 ring-1 ring-sky-100">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="text-lg font-semibold leading-5 text-slate-900">{p.name}</div>
-                              <div className="text-sm text-slate-600">{p.nic}</div>
-                              <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white shadow-md">
-                                <svg {...iconProps} className="size-3">
-                                  <path d="M3 12h18" />
-                                  <path d="M7 5h10l3 7-3 7H7L4 12l3-7z" />
-                                </svg>
-                                Father
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm text-slate-700">
-                                Age{' '}
-                                <span className="text-xl font-semibold text-slate-900">{p.age}</span>
-                              </div>
-                              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-sky-500 px-3 py-1 text-[11px] font-semibold text-white shadow-md">
-                                <svg {...iconProps} className="size-3">
-                                  <path d="M12 6v12" />
-                                  <path d="M8 12h8" />
-                                </svg>
-                                {p.gender}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                            {visitDateOptions.map((d, i) => {
-                              const selectedIdx = visitSelection[p.id] ?? 0;
-                              const isActive = i === selectedIdx;
-                              return (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  onClick={() =>
-                                    setVisitSelection((prev) => ({
-                                      ...prev,
-                                      [p.id]: i,
-                                    }))
-                                  }
-                                  className={`rounded-full px-3 py-1 transition ${
-                                    isActive
-                                      ? 'bg-slate-900 text-white shadow-sm'
-                                      : 'bg-white text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  {d}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-4 grid grid-cols-2 gap-6 text-sm text-slate-700">
-                            <div>
-                              <div className="text-base font-semibold text-slate-900">Disease</div>
-                              <div className="mt-1 grid grid-cols-2 gap-2 text-sm text-slate-800">
-                                <span>Fever</span>
-                                <span>Headache</span>
-                              </div>
-                              <div className="mt-4 text-base font-semibold text-slate-900">Clinical Drugs</div>
-                              <div className="mt-1 space-y-0.5">
-                                <div>Ibuprofen</div>
-                                <div>Naproxen</div>
-                                <div>Acetaminophen</div>
-                              </div>
-                              <div className="mt-4 text-base font-semibold text-slate-900">Outside Drugs</div>
-                              <div className="mt-1 text-sm text-slate-800">Paracetamol</div>
-                            </div>
-                            <div>
-                              <div className="text-base font-semibold text-slate-900">Medical Tests</div>
-                              <div className="mt-1">No</div>
-                              <div className="mt-4 text-base font-semibold text-slate-900">Special Notes</div>
-                              <div className="mt-1">No</div>
-                              <div className="mt-6 text-base font-semibold text-slate-900">Next Visit Date</div>
-                              <div className="mt-1 text-slate-700">05 November 2025</div>
-                            </div>
-                          </div>
-                          <div className="mt-6">
-                            <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black">
-                              Download as Report
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             </Card>
           </div>
