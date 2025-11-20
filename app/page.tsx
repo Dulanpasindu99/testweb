@@ -201,12 +201,11 @@ export default function MedLinkDoctorDashboard() {
 
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('p6');
-  const selected = useMemo(
-    () => patients.find((p) => p.id === selectedId) || patients[0],
-    [patients, selectedId]
-  );
 
-  const [gender, setGender] = useState<'Male' | 'Female'>(selected.gender as 'Male' | 'Female');
+  const [patientName, setPatientName] = useState('');
+  const [patientAge, setPatientAge] = useState('');
+  const [nicNumber, setNicNumber] = useState('');
+  const [gender, setGender] = useState<'Male' | 'Female'>('Male');
   // track expanded patient rows (accordion-style) - only one open at a time
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const toggleExpand = (id: string) => {
@@ -358,15 +357,12 @@ export default function MedLinkDoctorDashboard() {
     console.assert(typeof dateStr === 'string' && dateStr.length > 0, 'dateStr should be defined');
 
     // Extra tests
-    console.assert(selected.id === selectedId, 'Selected patient should match selectedId');
-    console.assert(gender === selected.gender, 'Gender toggle should reflect selected patient gender');
     console.assert(filtered.length <= patients.length, 'Filtered list cannot be longer than patients');
   }, [
     patients,
     sheet.clinical,
     timeStr,
     dateStr,
-    selected,
     selectedId,
     gender,
     filtered.length,
@@ -442,7 +438,6 @@ export default function MedLinkDoctorDashboard() {
                         }`}
                         onClick={() => {
                           setSelectedId(p.id);
-                          setGender(p.gender as 'Male' | 'Female');
                           toggleExpand(p.id);
                         }}
                       >
@@ -463,7 +458,6 @@ export default function MedLinkDoctorDashboard() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedId(p.id);
-                              setGender(p.gender as 'Male' | 'Female');
                               toggleExpand(p.id);
                             }}
                             className={`grid size-7 place-items-center rounded-full border border-slate-200 bg-white text-xs text-slate-700 ${SHADOWS.inset} transition hover:bg-slate-50`}
@@ -576,13 +570,15 @@ export default function MedLinkDoctorDashboard() {
                     <input
                       className={`flex-1 min-w-[220px] rounded-[999px] border border-transparent bg-white px-5 py-3 text-base font-semibold text-slate-900 placeholder-slate-400 ${SHADOWS.inset} outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100`}
                       placeholder="Enter Patient Name"
-                      defaultValue={selected.name}
+                      value={patientName}
+                      onChange={(event) => setPatientName(event.target.value)}
                     />
 
                     <input
                       className={`w-24 rounded-[999px] border border-transparent bg-white px-4 py-3 text-base font-semibold text-slate-900 placeholder-slate-400 ${SHADOWS.inset} outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100`}
                       placeholder="Age"
-                      defaultValue={selected.age}
+                      value={patientAge}
+                      onChange={(event) => setPatientAge(event.target.value)}
                     />
 
                     <div className={`rounded-full border border-white/80 bg-slate-50/70 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-600 ${SHADOWS.inset}`}>
@@ -599,7 +595,8 @@ export default function MedLinkDoctorDashboard() {
                   <input
                     className="w-52 rounded-[999px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                     placeholder="Enter NIC No"
-                    defaultValue={selected.nic}
+                    value={nicNumber}
+                    onChange={(event) => setNicNumber(event.target.value)}
                   />
 
                   <div className="flex items-center gap-2">
