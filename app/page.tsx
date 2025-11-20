@@ -304,6 +304,14 @@ export default function MedLinkDoctorDashboard() {
     router.push(`/patient/${patient.id}`);
   };
 
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const [firstMatch] = searchMatches;
+    if (firstMatch) {
+      handleSearchSelect(firstMatch);
+    }
+  };
+
   return (
     <div className="relative flex min-h-screen w-full bg-[#f9fafb] text-slate-900">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(56,189,248,0.08),transparent_32%),radial-gradient(circle_at_85%_8%,rgba(14,165,233,0.12),transparent_25%),radial-gradient(circle_at_70%_70%,rgba(14,165,233,0.08),transparent_30%)]" />
@@ -317,7 +325,7 @@ export default function MedLinkDoctorDashboard() {
             <Card className="flex h-full min-h-0 flex-col p-5">
               <SectionTitle title="Search Patients" sub="Name / NIC" />
               <div className="mt-4 rounded-2xl bg-slate-50/70 p-4 ring-1 ring-white/60">
-                <div className="relative">
+                <form className="relative" onSubmit={handleSearchSubmit}>
                   <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                   <input
                     placeholder="Search by name or NIC"
@@ -326,9 +334,12 @@ export default function MedLinkDoctorDashboard() {
                     className={`w-full rounded-2xl border border-transparent bg-white px-11 py-3 text-sm text-slate-900 ${SHADOWS.inset} outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100`}
                   />
                   <MicIcon className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-                </div>
+                  <button type="submit" className="hidden" aria-hidden>
+                    Search
+                  </button>
+                </form>
                 <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Start typing to search by patient name or NIC. Matching patients will appear below.
+                  Start typing to search by patient name or NIC. Press Enter to open the first match.
                 </p>
 
                 {search && (
