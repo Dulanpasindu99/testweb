@@ -1356,12 +1356,24 @@ export default function MedLinkDoctorDashboard() {
                                 <button
                                   type="button"
                                   onClick={addClinicalDrug}
-                                  className="group relative grid size-12 place-items-center rounded-full bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 ring-4 ring-white/60 shadow-[0_16px_30px_rgba(14,165,233,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(14,165,233,0.45)]"
+                                  className="group relative grid size-12 place-items-center rounded-full bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 ring-4 ring-white/60 shadow-[0_16px_30px_rgba(14,165,233,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(14,165,233,0.45)]"
                                   aria-label="Add drug"
                                 >
-                                  <span className="absolute inset-0 rounded-full bg-white/20 blur-[10px]" aria-hidden />
-                                  <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-white/30 via-white/10 to-transparent text-[22px] font-black text-white shadow-[0_8px_18px_rgba(255,255,255,0.35)]">
-                                    +
+                                  <span
+                                    className="absolute inset-0 rounded-full bg-white/30 blur-[12px] opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+                                    aria-hidden
+                                  />
+                                  <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-white/35 via-white/10 to-transparent shadow-[0_8px_18px_rgba(255,255,255,0.35)]">
+                                    <svg
+                                      aria-hidden
+                                      viewBox="0 0 24 24"
+                                      className="size-6 text-white drop-shadow-[0_2px_4px_rgba(14,165,233,0.45)]"
+                                    >
+                                      <path
+                                        fill="currentColor"
+                                        d="M20.5 7.25c.33.33.33.87 0 1.2l-9.25 9.25a.85.85 0 0 1-1.2 0L3.5 11.25a.85.85 0 0 1 1.2-1.2l5 5 8.65-8.65c.33-.33.87-.33 1.2 0Z"
+                                      />
+                                    </svg>
                                   </span>
                                 </button>
                               </div>
