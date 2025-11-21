@@ -245,7 +245,7 @@ export default function MedLinkDoctorDashboard() {
     []
   );
 
-  const [selectedTests, setSelectedTests] = useState<string[]>(['F.B.C', 'Cholesterol']);
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
   const [testQuery, setTestQuery] = useState('');
   const [highlightedTestIndex, setHighlightedTestIndex] = useState(-1);
   const [testChipsPendingRemoval, setTestChipsPendingRemoval] = useState<Set<string>>(new Set());
