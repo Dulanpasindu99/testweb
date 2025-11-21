@@ -1413,13 +1413,13 @@ export default function MedLinkDoctorDashboard() {
                           ))}
                         </div>
                         <div className="rounded-2xl bg-white px-4 py-4 shadow-sm">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-col items-center gap-3 text-center">
                             <div className="text-base font-bold text-slate-900">Next Visit Date</div>
-                            <div className="flex flex-1 flex-wrap items-center gap-2">
+                            <div className="grid w-full max-w-md grid-cols-2 gap-3">
                               <button
                                 type="button"
                                 onClick={() => handleNextVisitSelect('TwoWeeks')}
-                                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                className={`w-full rounded-full px-4 py-2 text-sm font-semibold transition ${
                                   nextVisitOption === 'TwoWeeks'
                                     ? 'bg-sky-500/90 text-white shadow-[0_10px_25px_rgba(14,165,233,0.35)]'
                                     : 'border border-slate-200 bg-white text-slate-800 hover:border-slate-300'
@@ -1430,7 +1430,7 @@ export default function MedLinkDoctorDashboard() {
                               <button
                                 type="button"
                                 onClick={() => handleNextVisitSelect('ThreeWeeks')}
-                                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                className={`w-full rounded-full px-4 py-2 text-sm font-semibold transition ${
                                   nextVisitOption === 'ThreeWeeks'
                                     ? 'bg-sky-500/90 text-white shadow-[0_10px_25px_rgba(14,165,233,0.35)]'
                                     : 'border border-slate-200 bg-white text-slate-800 hover:border-slate-300'
@@ -1439,14 +1439,14 @@ export default function MedLinkDoctorDashboard() {
                                 Three Weeks
                               </button>
                             </div>
-                          </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-3">
-                            <div className="flex-1 min-w-[200px] rounded-full bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-slate-200">
-                              {nextVisitDate}
+                            <div className="w-full max-w-md space-y-3">
+                              <div className="w-full rounded-full bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-slate-200">
+                                {nextVisitDate}
+                              </div>
+                              <button className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800">
+                                Confirm
+                              </button>
                             </div>
-                            <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800">
-                              Confirm
-                            </button>
                           </div>
                         </div>
                       </div>
