@@ -18,6 +18,7 @@ interface ClinicalDrug {
   dose: string;
   terms: string;
   amount: string;
+  source: 'Clinical' | 'Outside';
 }
 
 const SHADOWS = {
@@ -257,6 +258,7 @@ export default function MedLinkDoctorDashboard() {
     terms: 'Daily' as 'Daily' | 'Hourly',
     termsValue: '',
     amount: '',
+    source: 'Clinical' as ClinicalDrug['source'],
   });
 
   const filteredDrugSuggestions = useMemo(() => {
@@ -281,6 +283,13 @@ export default function MedLinkDoctorDashboard() {
     }));
   };
 
+  const toggleDrugSource = () => {
+    setClinicalDrugForm((prev) => ({
+      ...prev,
+      source: prev.source === 'Clinical' ? 'Outside' : 'Clinical',
+    }));
+  };
+
   const addClinicalDrug = () => {
     const name = clinicalDrugForm.name.trim();
     const doseValue = clinicalDrugForm.doseValue.trim();
@@ -297,10 +306,19 @@ export default function MedLinkDoctorDashboard() {
       dose,
       terms: termsDisplay,
       amount: amountValue,
+      source: clinicalDrugForm.source,
     };
 
     setRxRows((prev) => [...prev, newEntry]);
-    setClinicalDrugForm({ name: '', doseValue: '', doseUnit: 'MG', terms: 'Daily', termsValue: '', amount: '' });
+    setClinicalDrugForm({
+      name: '',
+      doseValue: '',
+      doseUnit: 'MG',
+      terms: 'Daily',
+      termsValue: '',
+      amount: '',
+      source: 'Clinical',
+    });
   };
 
   const updateRxRow = (index: number, field: keyof ClinicalDrug, value: string) => {
@@ -309,7 +327,12 @@ export default function MedLinkDoctorDashboard() {
         i === index
           ? {
               ...row,
-              [field]: field === 'amount' ? value.replace(/[^0-9.]/g, '') : value,
+              [field]:
+                field === 'amount'
+                  ? value.replace(/[^0-9.]/g, '')
+                  : field === 'source'
+                    ? (value as ClinicalDrug['source'])
+                    : value,
             }
           : row
       )
@@ -689,13 +712,32 @@ export default function MedLinkDoctorDashboard() {
   ]);
 
   const buildPatientDetailMarkup = (patient: Patient) => {
-    const clinicalRows = sheet.clinical
-      .map((drug) => `<li class="py-1 text-sm text-slate-800">${drug}</li>`)
-      .join('');
-    const outsideRows = sheet.outside
+    const drugRows = [
+      ...sheet.clinical.map((drug) => ({ name: drug, dose: '—', terms: '', amount: '—', source: 'Clinical D.' })),
+      ...sheet.outside.map((item) => ({
+        name: item.name,
+        dose: item.dose,
+        terms: item.terms,
+        amount: String(item.amount),
+        source: 'Outside D.',
+      })),
+    ];
+
+    const drugList = drugRows
       .map(
-        (item) =>
-          `<li class="flex items-center justify-between border-b border-slate-100 py-2 text-sm text-slate-800"><span>${item.name}</span><span class="text-xs text-slate-500">${item.dose}</span><span class="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white">${item.amount}</span></li>`
+        (drug) =>
+          `<li style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:8px 0;font-size:14px;color:#0f172a;">` +
+          `<div>` +
+          `<div style="font-weight:700;">${drug.name}</div>` +
+          `<div style="color:#64748b;font-size:12px;">${drug.dose}${drug.terms ? ` · ${drug.terms}` : ''}</div>` +
+          `</div>` +
+          `<div style="display:flex;align-items:center;gap:8px;">` +
+          `<span style="border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800;text-transform:uppercase;background:${
+            drug.source === 'Clinical D.' ? '#0f172a' : '#fef3c7'
+          };color:${drug.source === 'Clinical D.' ? 'white' : '#78350f'};">${drug.source}</span>` +
+          `<span style="border-radius:12px;background:#0f172a;color:white;padding:6px 10px;font-weight:700;font-size:12px;">${drug.amount}</span>` +
+          `</div>` +
+          `</li>`
       )
       .join('');
     const testsList = selectedTests
@@ -747,25 +789,19 @@ export default function MedLinkDoctorDashboard() {
             </div>
             <div class="section grid">
               <div>
-                <h3>Clinical Drugs</h3>
-                <ul style="list-style:none;padding:0;margin:0;">${clinicalRows}</ul>
+                <h3>Drugs</h3>
+                <ul style="list-style:none;padding:0;margin:0;">${drugList}</ul>
               </div>
               <div>
                 <h3>Medical Tests</h3>
                 <div class="chip-row">${testsList}</div>
               </div>
             </div>
-            <div class="section grid">
-              <div>
-                <h3>Outside Drugs</h3>
-                <ul style="list-style:none;padding:0;margin:0;">${outsideRows}</ul>
-              </div>
-              <div>
-                <h3>Special Notes</h3>
-                <div class="subtitle">${sheet.notes}</div>
-                <div class="subtitle" style="margin-top:12px;">Next Visit Date</div>
-                <div class="title" style="font-size:16px;">${sheet.nextVisit}</div>
-              </div>
+            <div class="section">
+              <h3>Special Notes</h3>
+              <div class="subtitle">${sheet.notes}</div>
+              <div class="subtitle" style="margin-top:12px;">Next Visit Date</div>
+              <div class="title" style="font-size:16px;">${sheet.nextVisit}</div>
             </div>
             <button class="footer-btn" type="button">Download as Report</button>
           </div>
@@ -1144,247 +1180,223 @@ export default function MedLinkDoctorDashboard() {
                   </div>
                   </div>
 
-                  {/* Row 2: Clinical / Outside tables + mini cards */}
+                  {/* Row 2: Drugs table + mini card */}
                   <div className="grid grid-cols-12 gap-6 overflow-hidden">
-                  {/* Clinical row: table + mini card */}
-                  <div className="col-span-8">
-                    <div className="h-full rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="text-2xl font-bold text-slate-900">Clinical Drugs</div>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
-                          {rxRows.length} {rxRows.length === 1 ? 'item' : 'items'}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-                        <div className="grid grid-cols-12 gap-3">
-                          <div className="col-span-4">
-                            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Drug Name</label>
-                            <div className="relative mt-1">
-                              <input
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                                placeholder="Type to search"
-                                value={clinicalDrugForm.name}
-                                onChange={(event) =>
-                                  setClinicalDrugForm((prev) => ({ ...prev, name: event.target.value }))
-                                }
-                              />
-                              {Boolean(filteredDrugSuggestions.length) && clinicalDrugForm.name.trim() !== '' && (
-                                <div className="absolute left-0 right-0 z-10 mt-2 max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
-                                  <ul className="divide-y divide-slate-100 text-sm text-slate-700">
-                                    {filteredDrugSuggestions.map((drug) => (
-                                      <li key={drug}>
-                                        <button
-                                          type="button"
-                                          className="flex w-full items-center justify-between px-3 py-2 text-left transition hover:bg-sky-50"
-                                          onMouseDown={(event) => {
-                                            event.preventDefault();
-                                            setClinicalDrugForm((prev) => ({ ...prev, name: drug }));
-                                          }}
-                                        >
-                                          <span className="truncate">{drug}</span>
-                                          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-600">Add</span>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="col-span-3">
-                            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dose</label>
-                            <div className="mt-1 flex rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow-sm">
-                              <input
-                                className="w-full rounded-l-xl px-3 py-2 outline-none"
-                                placeholder="Value"
-                                inputMode="numeric"
-                                value={clinicalDrugForm.doseValue}
-                                onChange={(event) =>
-                                  setClinicalDrugForm((prev) => ({ ...prev, doseValue: event.target.value }))
-                                }
-                              />
-                              <button
-                                type="button"
-                                className={`rounded-r-xl px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] transition ${
-                                  clinicalDrugForm.doseUnit === 'MG'
-                                    ? 'bg-slate-900 text-white shadow-md'
-                                    : 'bg-slate-100 text-slate-700'
-                                }`}
-                                onClick={toggleDoseUnit}
-                              >
-                                {clinicalDrugForm.doseUnit}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="col-span-3">
-                            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Terms</label>
-                            <div className="mt-1 flex overflow-hidden rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow-sm">
-                              <button
-                                type="button"
-                                onClick={toggleTerms}
-                                className={`whitespace-nowrap px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] transition ${
-                                  clinicalDrugForm.terms === 'Daily'
-                                    ? 'bg-sky-600 text-white shadow-[0_6px_12px_rgba(14,165,233,0.25)]'
-                                    : 'bg-amber-500 text-white shadow-[0_6px_12px_rgba(245,158,11,0.25)]'
-                                }`}
-                              >
-                                {clinicalDrugForm.terms}
-                              </button>
-                              <input
-                                className="w-full px-3 py-2 outline-none"
-                                placeholder="Value"
-                                inputMode="numeric"
-                                value={clinicalDrugForm.termsValue}
-                                onChange={(event) =>
-                                  setClinicalDrugForm((prev) => ({ ...prev, termsValue: event.target.value }))
-                                }
-                              />
-                            </div>
-                          </div>
-
-                          <div className="col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Amount</label>
-                            <div className="mt-1 flex items-center gap-2">
-                              <input
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                                placeholder="Qty"
-                                inputMode="numeric"
-                                value={clinicalDrugForm.amount}
-                                onChange={(event) =>
-                                  setClinicalDrugForm((prev) => ({ ...prev, amount: event.target.value }))
-                                }
-                              />
-                              <button
-                                type="button"
-                                onClick={addClinicalDrug}
-                                className="flex size-10 items-center justify-center rounded-full bg-sky-600 text-lg font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.35)] transition hover:-translate-y-px hover:bg-sky-700"
-                                aria-label="Add clinical drug"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
+                    <div className="col-span-9">
+                      <div className="h-full rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="text-2xl font-bold text-slate-900">Drugs</div>
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                            {rxRows.length} {rxRows.length === 1 ? 'item' : 'items'}
+                          </span>
                         </div>
-                      </div>
 
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-                        <div className="grid grid-cols-[1.6fr_1fr_1fr_0.8fr_0.4fr] gap-2 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6b7280]">
-                          <div>Drug Name</div>
-                          <div>Dose</div>
-                          <div>Terms</div>
-                          <div>Amount</div>
-                          <div className="text-center">Action</div>
-                        </div>
-                        <div className="divide-y divide-slate-100 text-sm text-slate-900">
-                          {rxRows.map((r, i) => (
-                            <div
-                              key={i}
-                              className="group grid grid-cols-[1.6fr_1fr_1fr_0.8fr_0.4fr] items-center gap-2 bg-white/80 px-4 py-3 odd:bg-white even:bg-slate-50/60"
-                            >
-                              <input
-                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                                value={r.drug}
-                                onChange={(event) => updateRxRow(i, 'drug', event.target.value)}
-                              />
-                              <input
-                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                                value={r.dose}
-                                onChange={(event) => updateRxRow(i, 'dose', event.target.value)}
-                              />
-                              <input
-                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                                value={r.terms}
-                                onChange={(event) => updateRxRow(i, 'terms', event.target.value)}
-                              />
-                              <input
-                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                                value={r.amount}
-                                inputMode="numeric"
-                                onChange={(event) => updateRxRow(i, 'amount', event.target.value)}
-                              />
-                              <div className="flex justify-center">
+                        <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                          <div className="grid grid-cols-12 gap-3">
+                            <div className="col-span-5">
+                              <div className="flex items-center justify-between gap-3">
+                                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Drug Name</label>
                                 <button
                                   type="button"
-                                  onClick={() => removeRxRow(i)}
-                                  className="opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
-                                  aria-label="Delete clinical drug"
+                                  onClick={toggleDrugSource}
+                                  className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
+                                    clinicalDrugForm.source === 'Clinical'
+                                      ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-200'
+                                      : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+                                  }`}
                                 >
-                                  ×
+                                  {clinicalDrugForm.source === 'Clinical' ? 'Clinical D.' : 'Outside D.'}
+                                </button>
+                              </div>
+                              <div className="relative mt-1">
+                                <input
+                                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                  placeholder="Type to search"
+                                  value={clinicalDrugForm.name}
+                                  onChange={(event) =>
+                                    setClinicalDrugForm((prev) => ({ ...prev, name: event.target.value }))
+                                  }
+                                />
+                                {Boolean(filteredDrugSuggestions.length) && clinicalDrugForm.name.trim() !== '' && (
+                                  <div className="absolute left-0 right-0 z-10 mt-2 max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                                    <ul className="divide-y divide-slate-100 text-sm text-slate-700">
+                                      {filteredDrugSuggestions.map((drug) => (
+                                        <li key={drug}>
+                                          <button
+                                            type="button"
+                                            className="flex w-full items-center justify-between px-3 py-2 text-left transition hover:bg-sky-50"
+                                            onMouseDown={(event) => {
+                                              event.preventDefault();
+                                              setClinicalDrugForm((prev) => ({ ...prev, name: drug }));
+                                            }}
+                                          >
+                                            <span>{drug}</span>
+                                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                              Press Enter
+                                            </span>
+                                          </button>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="col-span-2">
+                              <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dose</label>
+                              <div className="mt-1 grid grid-cols-8 items-center gap-2">
+                                <input
+                                  className="col-span-5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                  placeholder="Qty"
+                                  inputMode="numeric"
+                                  value={clinicalDrugForm.doseValue}
+                                  onChange={(event) =>
+                                    setClinicalDrugForm((prev) => ({ ...prev, doseValue: event.target.value }))
+                                  }
+                                />
+                                <button
+                                  type="button"
+                                  onClick={toggleDoseUnit}
+                                  className="col-span-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300"
+                                  aria-label="Toggle dose unit"
+                                >
+                                  {clinicalDrugForm.doseUnit}
                                 </button>
                               </div>
                             </div>
+
+                            <div className="col-span-2">
+                              <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Terms</label>
+                              <div className="mt-1 grid grid-cols-8 items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={toggleTerms}
+                                  className="col-span-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300"
+                                  aria-label="Toggle terms"
+                                >
+                                  {clinicalDrugForm.terms}
+                                </button>
+                                <input
+                                  className="col-span-5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                  placeholder="Value"
+                                  inputMode="numeric"
+                                  value={clinicalDrugForm.termsValue}
+                                  onChange={(event) =>
+                                    setClinicalDrugForm((prev) => ({ ...prev, termsValue: event.target.value }))
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            <div className="col-span-2">
+                              <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Amount</label>
+                              <div className="mt-1 flex items-center gap-2">
+                                <input
+                                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                  placeholder="Qty"
+                                  inputMode="numeric"
+                                  value={clinicalDrugForm.amount}
+                                  onChange={(event) =>
+                                    setClinicalDrugForm((prev) => ({ ...prev, amount: event.target.value }))
+                                  }
+                                />
+                                <button
+                                  type="button"
+                                  onClick={addClinicalDrug}
+                                  className="flex size-10 items-center justify-center rounded-full bg-sky-600 text-lg font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.35)] transition hover:-translate-y-px hover:bg-sky-700"
+                                  aria-label="Add drug"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
+                            <div className="grid grid-cols-[1.5fr_0.9fr_1fr_1fr_0.8fr_0.5fr] gap-2 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6b7280]">
+                              <div>Drug Name</div>
+                              <div>Type</div>
+                              <div>Dose</div>
+                              <div>Terms</div>
+                              <div>Amount</div>
+                              <div className="text-center">Action</div>
+                            </div>
+                            <div className="divide-y divide-slate-100 text-sm text-slate-900">
+                              {rxRows.map((r, i) => (
+                                <div
+                                  key={i}
+                                  className="group grid grid-cols-[1.5fr_0.9fr_1fr_1fr_0.8fr_0.5fr] items-center gap-2 bg-white/80 px-4 py-3 odd:bg-white even:bg-slate-50/60"
+                                >
+                                  <input
+                                    className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                    value={r.drug}
+                                    onChange={(event) => updateRxRow(i, 'drug', event.target.value)}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateRxRow(i, 'source', r.source === 'Clinical' ? 'Outside' : 'Clinical')
+                                    }
+                                    className={`w-full rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
+                                      r.source === 'Clinical'
+                                        ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-200'
+                                        : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                                    }`}
+                                  >
+                                    {r.source === 'Clinical' ? 'Clinical D.' : 'Outside D.'}
+                                  </button>
+                                  <input
+                                    className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                    value={r.dose}
+                                    onChange={(event) => updateRxRow(i, 'dose', event.target.value)}
+                                  />
+                                  <input
+                                    className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                    value={r.terms}
+                                    onChange={(event) => updateRxRow(i, 'terms', event.target.value)}
+                                  />
+                                  <input
+                                    className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                    value={r.amount}
+                                    inputMode="numeric"
+                                    onChange={(event) => updateRxRow(i, 'amount', event.target.value)}
+                                  />
+                                  <div className="flex justify-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => removeRxRow(i)}
+                                      className="opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+                                      aria-label="Delete drug"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-3">
+                      <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-100 bg-slate-50 p-5">
+                        <div className="space-y-2 text-base font-semibold text-slate-900">
+                          {sheet.clinical.map((c, i) => (
+                            <div key={i} className="rounded-2xl bg-white px-4 py-2 text-slate-700 shadow-sm">
+                              {c}
+                            </div>
                           ))}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-span-4">
-                    <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-100 bg-slate-50 p-5">
-                      <div className="space-y-2 text-base font-semibold text-slate-900">
-                        {sheet.clinical.map((c, i) => (
-                          <div key={i} className="rounded-2xl bg-white px-4 py-2 text-slate-700 shadow-sm">
-                            {c}
-                          </div>
-                        ))}
-                      </div>
-                      <div>
-                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
-                          <span>↪</span> Use same drugs
-                        </button>
-                        <p className="mt-2 text-center text-xs text-slate-500">• Clinical Drugs From previous history</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Outside row: table + mini card */}
-                  <div className="col-span-8">
-                    <div className="h-full rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="text-2xl font-bold text-slate-900">Outside Drugs</div>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
-                          1 item
-                        </span>
-                      </div>
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-                        <div className="grid grid-cols-4 gap-2 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6b7280]">
-                          <div>Drug Name</div>
-                          <div>Dose</div>
-                          <div>Terms</div>
-                          <div>Amount</div>
-                        </div>
-                        <div className="divide-y divide-slate-100 text-sm text-slate-900">
-                          <div className="grid grid-cols-4 gap-2 bg-white px-4 py-3">
-                            <div>{sheet.outside[0]?.name}</div>
-                            <div>{sheet.outside[0]?.dose}</div>
-                            <div>{sheet.outside[0]?.terms}</div>
-                            <div>{sheet.outside[0]?.amount}</div>
-                          </div>
+                        <div>
+                          <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+                            <span>↪</span> Use same drugs
+                          </button>
+                          <p className="mt-2 text-center text-xs text-slate-500">• Drugs From previous history</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="col-span-4">
-                    <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-500">Outside Drugs</div>
-                        <div className="text-2xl font-semibold text-slate-900">{sheet.outside[0]?.name}</div>
-                        <div className="mt-1 text-sm text-slate-500">
-                          {sheet.outside[0]?.dose} · {sheet.outside[0]?.terms}
-                        </div>
-                      </div>
-                      <div>
-                        <button className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
-                          <span>↪</span> Use same drugs
-                        </button>
-                        <p className="mt-2 text-center text-xs text-slate-500">• Outside Drugs From previous history</p>
-                      </div>
-                    </div>
-                  </div>
                   </div>
 
                   {/* Next Visit Date bar */}
