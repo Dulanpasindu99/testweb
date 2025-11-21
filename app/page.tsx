@@ -17,7 +17,7 @@ interface ClinicalDrug {
   drug: string;
   dose: string;
   terms: string;
-  amount: number;
+  amount: string;
 }
 
 const SHADOWS = {
@@ -216,7 +216,7 @@ export default function MedLinkDoctorDashboard() {
   // Right sheet editable state
   const [sheet] = useState({
     disease: 'Fever',
-    clinical: ['Ibuprofen', 'Naproxen', 'Acetaminophen'],
+    clinical: [],
     outside: [{ name: 'Paracetamol', dose: '250MG', terms: 'Hourly', amount: 32 }],
     tests: 'No',
     notes: 'No',
@@ -230,11 +230,7 @@ export default function MedLinkDoctorDashboard() {
     () => ['Today', '05/10', '05/09', '05/08', '05/07', '05/06', '05/05', '15/04', '15/04'],
     []
   );
-  const [rxRows, setRxRows] = useState<ClinicalDrug[]>([
-    { drug: 'Ibuprofen', dose: '250MG', terms: 'Daily', amount: 2 },
-    { drug: 'Naproxen', dose: '250MG', terms: 'Daily', amount: 2 },
-    { drug: 'Acetaminophen', dose: '250MG', terms: 'Hourly', amount: 3 },
-  ]);
+  const [rxRows, setRxRows] = useState<ClinicalDrug[]>([]);
 
   const suggestedDrugNames = useMemo(
     () => [
@@ -259,6 +255,7 @@ export default function MedLinkDoctorDashboard() {
     doseValue: '',
     doseUnit: 'MG' as 'MG' | 'ML',
     terms: 'Daily' as 'Daily' | 'Hourly',
+    termsValue: '',
     amount: '',
   });
 
@@ -287,24 +284,40 @@ export default function MedLinkDoctorDashboard() {
   const addClinicalDrug = () => {
     const name = clinicalDrugForm.name.trim();
     const doseValue = clinicalDrugForm.doseValue.trim();
+    const termsValue = clinicalDrugForm.termsValue.trim();
     const amountValue = clinicalDrugForm.amount.trim();
 
     if (!name || !doseValue || !amountValue) return;
 
-    const amountNumber = Number(amountValue);
-    if (Number.isNaN(amountNumber)) return;
-
     const dose = `${doseValue}${clinicalDrugForm.doseUnit}`;
+    const termsDisplay = termsValue ? `${clinicalDrugForm.terms} ${termsValue}` : clinicalDrugForm.terms;
 
     const newEntry: ClinicalDrug = {
       drug: name,
       dose,
-      terms: clinicalDrugForm.terms,
-      amount: amountNumber,
+      terms: termsDisplay,
+      amount: amountValue,
     };
 
     setRxRows((prev) => [...prev, newEntry]);
-    setClinicalDrugForm({ name: '', doseValue: '', doseUnit: 'MG', terms: 'Daily', amount: '' });
+    setClinicalDrugForm({ name: '', doseValue: '', doseUnit: 'MG', terms: 'Daily', termsValue: '', amount: '' });
+  };
+
+  const updateRxRow = (index: number, field: keyof ClinicalDrug, value: string) => {
+    setRxRows((prev) =>
+      prev.map((row, i) =>
+        i === index
+          ? {
+              ...row,
+              [field]: field === 'amount' ? value.replace(/[^0-9.]/g, '') : value,
+            }
+          : row
+      )
+    );
+  };
+
+  const removeRxRow = (index: number) => {
+    setRxRows((prev) => prev.filter((_, i) => i !== index));
   };
 
   const preSavedTests = useMemo(
@@ -1208,58 +1221,100 @@ export default function MedLinkDoctorDashboard() {
 
                           <div className="col-span-3">
                             <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Terms</label>
-                            <button
-                              type="button"
-                              onClick={toggleTerms}
-                              className={`mt-1 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm font-semibold shadow-sm transition ${
-                                clinicalDrugForm.terms === 'Daily'
-                                  ? 'border-sky-200 bg-sky-50 text-sky-700'
-                                  : 'border-amber-200 bg-amber-50 text-amber-700'
-                              }`}
-                            >
-                              <span>{clinicalDrugForm.terms}</span>
-                              <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Tap to toggle</span>
-                            </button>
+                            <div className="mt-1 flex overflow-hidden rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow-sm">
+                              <button
+                                type="button"
+                                onClick={toggleTerms}
+                                className={`whitespace-nowrap px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] transition ${
+                                  clinicalDrugForm.terms === 'Daily'
+                                    ? 'bg-sky-600 text-white shadow-[0_6px_12px_rgba(14,165,233,0.25)]'
+                                    : 'bg-amber-500 text-white shadow-[0_6px_12px_rgba(245,158,11,0.25)]'
+                                }`}
+                              >
+                                {clinicalDrugForm.terms}
+                              </button>
+                              <input
+                                className="w-full px-3 py-2 outline-none"
+                                placeholder="Value"
+                                inputMode="numeric"
+                                value={clinicalDrugForm.termsValue}
+                                onChange={(event) =>
+                                  setClinicalDrugForm((prev) => ({ ...prev, termsValue: event.target.value }))
+                                }
+                              />
+                            </div>
                           </div>
 
                           <div className="col-span-2">
                             <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Amount</label>
-                            <input
-                              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
-                              placeholder="Qty"
-                              inputMode="numeric"
-                              value={clinicalDrugForm.amount}
-                              onChange={(event) =>
-                                setClinicalDrugForm((prev) => ({ ...prev, amount: event.target.value }))
-                              }
-                            />
+                            <div className="mt-1 flex items-center gap-2">
+                              <input
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                placeholder="Qty"
+                                inputMode="numeric"
+                                value={clinicalDrugForm.amount}
+                                onChange={(event) =>
+                                  setClinicalDrugForm((prev) => ({ ...prev, amount: event.target.value }))
+                                }
+                              />
+                              <button
+                                type="button"
+                                onClick={addClinicalDrug}
+                                className="flex size-10 items-center justify-center rounded-full bg-sky-600 text-lg font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.35)] transition hover:-translate-y-px hover:bg-sky-700"
+                                aria-label="Add clinical drug"
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-end">
-                          <button
-                            type="button"
-                            onClick={addClinicalDrug}
-                            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition hover:-translate-y-[1px] hover:shadow-[0_14px_30px_rgba(15,23,42,0.24)]"
-                          >
-                            <span>＋</span> Add Clinical Drug
-                          </button>
                         </div>
                       </div>
 
                       <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-                        <div className="grid grid-cols-4 gap-2 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6b7280]">
+                        <div className="grid grid-cols-[1.6fr_1fr_1fr_0.8fr_0.4fr] gap-2 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6b7280]">
                           <div>Drug Name</div>
                           <div>Dose</div>
                           <div>Terms</div>
                           <div>Amount</div>
+                          <div className="text-center">Action</div>
                         </div>
                         <div className="divide-y divide-slate-100 text-sm text-slate-900">
                           {rxRows.map((r, i) => (
-                            <div key={i} className="grid grid-cols-4 gap-2 bg-white/80 px-4 py-3 odd:bg-white even:bg-slate-50/60">
-                              <div>{r.drug}</div>
-                              <div>{r.dose}</div>
-                              <div>{r.terms}</div>
-                              <div>{r.amount}</div>
+                            <div
+                              key={i}
+                              className="group grid grid-cols-[1.6fr_1fr_1fr_0.8fr_0.4fr] items-center gap-2 bg-white/80 px-4 py-3 odd:bg-white even:bg-slate-50/60"
+                            >
+                              <input
+                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                value={r.drug}
+                                onChange={(event) => updateRxRow(i, 'drug', event.target.value)}
+                              />
+                              <input
+                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                value={r.dose}
+                                onChange={(event) => updateRxRow(i, 'dose', event.target.value)}
+                              />
+                              <input
+                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                value={r.terms}
+                                onChange={(event) => updateRxRow(i, 'terms', event.target.value)}
+                              />
+                              <input
+                                className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-sky-200 focus:ring-2 focus:ring-sky-100"
+                                value={r.amount}
+                                inputMode="numeric"
+                                onChange={(event) => updateRxRow(i, 'amount', event.target.value)}
+                              />
+                              <div className="flex justify-center">
+                                <button
+                                  type="button"
+                                  onClick={() => removeRxRow(i)}
+                                  className="opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+                                  aria-label="Delete clinical drug"
+                                >
+                                  ×
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
