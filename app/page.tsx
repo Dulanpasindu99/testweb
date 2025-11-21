@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 // ---- Types ----
 interface Patient {
@@ -276,6 +276,8 @@ export default function MedLinkDoctorDashboard() {
   const [isFetchingDiseases, setIsFetchingDiseases] = useState(false);
   const [chipsPendingRemoval, setChipsPendingRemoval] = useState<Set<string>>(new Set());
 
+  const chipsPendingRemovalRef = useRef(chipsPendingRemoval);
+
   const diseaseQuickTags = selectedDiseases;
 
   const normalizeDiseaseSuggestions = (payload: unknown, query: string): string[] => {
@@ -390,6 +392,29 @@ export default function MedLinkDoctorDashboard() {
       return next;
     });
   };
+
+  useEffect(() => {
+    chipsPendingRemovalRef.current = chipsPendingRemoval;
+  }, [chipsPendingRemoval]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!chipsPendingRemovalRef.current.size) return;
+      const target = event.target as HTMLElement | null;
+      const pendingChip = target?.closest('[data-disease-chip]');
+      const isPendingChip = pendingChip?.getAttribute('data-pending-removal') === 'true';
+
+      if (!isPendingChip) {
+        setChipsPendingRemoval(new Set());
+      }
+    };
+
+    document.addEventListener('click', handleOutsideClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleOutsideClick, true);
+    };
+  }, []);
 
   const handleDiseaseKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown' && diseaseSuggestions.length) {
@@ -863,18 +888,18 @@ export default function MedLinkDoctorDashboard() {
                             <button
                               key={tag}
                               type="button"
+                              data-disease-chip
+                              data-pending-removal={isPendingRemoval}
                               onClick={() => toggleChipRemovalState(tag)}
-                              className={`relative rounded-full px-4 py-2 text-sm font-semibold shadow-sm ring-1 transition ${
+                              className={`group relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm ring-1 transition ${
                                 isPendingRemoval
                                   ? 'bg-rose-50 text-rose-700 ring-rose-200'
                                   : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
                               }`}
                             >
-                              <span className={isPendingRemoval ? 'opacity-30' : ''}>{tag}</span>
+                              <span className={isPendingRemoval ? 'opacity-70' : ''}>{tag}</span>
                               {isPendingRemoval ? (
-                                <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-base font-black text-rose-500">
-                                  ×
-                                </span>
+                                <span className="ml-1 text-base font-black text-rose-500 transition group-hover:scale-110">×</span>
                               ) : null}
                             </button>
                           );
