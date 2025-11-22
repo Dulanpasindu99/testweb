@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
+import { PageTransition } from "./components/PageTransition";
 
 export const metadata: Metadata = {
   title: "MedLink UI",
@@ -12,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       {/* Ignore extension-injected attributes on hydration (e.g., Grammarly) */}
       <body suppressHydrationWarning className="antialiased">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </body>
     </html>
   );
