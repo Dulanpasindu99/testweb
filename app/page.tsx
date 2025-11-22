@@ -1471,7 +1471,7 @@ export default function MedLinkDoctorDashboard() {
                 <li key={item.id}>
                   <Link
                     href={item.href}
-                    className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ioc-blue)] ${
+                    className={`ios-nav-button group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ioc-blue)] ${
                       item.id === activeNavigationId
                         ? 'size-14 bg-[var(--ioc-blue)] text-white shadow-[0_18px_32px_rgba(0,114,206,0.28)]'
                         : 'size-12 bg-white text-slate-500 ring-1 ring-sky-100 hover:ring-sky-200'
@@ -1493,7 +1493,7 @@ export default function MedLinkDoctorDashboard() {
 
         <button
           type="button"
-          className="group relative flex size-14 items-center justify-center rounded-full border border-rose-100 bg-white text-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.25)] transition hover:-translate-y-0.5 hover:border-rose-200"
+          className="ios-nav-button group relative flex size-14 items-center justify-center rounded-full border border-rose-100 bg-white text-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.25)] transition hover:-translate-y-0.5 hover:border-rose-200"
           aria-label={logoutItem.label}
         >
           <logoutItem.icon className="size-5" />
