@@ -226,41 +226,46 @@ export default function AssistantScreen() {
   );
 
   const activeNavigationId = 'assistant';
+  const logoutItem = useMemo(() => ({ id: 'logout', label: 'Logout', icon: LogoutIcon }), []);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1700px] gap-6 px-4 py-8 lg:px-8">
-      <main className="flex-1 space-y-6">
-        <header className="flex items-start justify-between rounded-[26px] border border-slate-100 bg-slate-50/80 p-4 shadow-sm backdrop-blur">
-          <div>
-            <p className="text-sm font-semibold text-slate-500">Assistant Screen</p>
-            <h1 className="text-3xl font-bold text-slate-900">Doctor&apos;s Assistant Panel</h1>
-            <p className="text-sm text-slate-500">Same login as doctor, but access locked to assistant workspace.</p>
-          </div>
-          <div className="grid grid-cols-5 gap-3 text-center text-xs font-semibold text-slate-700">
-            <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-slate-500">Total</p>
-              <p className="text-xl font-bold text-slate-900">{stats.total}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-slate-500">Male</p>
-              <p className="text-xl font-bold text-slate-900">{stats.male}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-slate-500">Female</p>
-              <p className="text-xl font-bold text-slate-900">{stats.female}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-slate-500">Existing</p>
-              <p className="text-xl font-bold text-slate-900">{stats.existing}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-slate-500">New</p>
-              <p className="text-xl font-bold text-slate-900">{stats.new}</p>
-            </div>
-          </div>
-        </header>
+    <div className="relative flex min-h-screen w-full bg-[#f9fafb] text-slate-900">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(56,189,248,0.08),transparent_32%),radial-gradient(circle_at_85%_8%,rgba(14,165,233,0.12),transparent_25%),radial-gradient(circle_at_70%_70%,rgba(14,165,233,0.08),transparent_30%)]" />
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.6fr_1fr]">
+      <div className="relative flex min-h-screen flex-1 flex-col px-6 py-8 lg:px-10">
+        <div className="mx-auto flex w-full max-w-[1700px] flex-1 gap-6">
+          <main className="flex-1 space-y-6">
+            <header className="flex items-start justify-between rounded-[26px] border border-slate-100 bg-slate-50/80 p-4 shadow-sm backdrop-blur">
+              <div>
+                <p className="text-sm font-semibold text-slate-500">Assistant Screen</p>
+                <h1 className="text-3xl font-bold text-slate-900">Doctor&apos;s Assistant Panel</h1>
+                <p className="text-sm text-slate-500">Same login as doctor, but access locked to assistant workspace.</p>
+              </div>
+              <div className="grid grid-cols-5 gap-3 text-center text-xs font-semibold text-slate-700">
+                <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                  <p className="text-slate-500">Total</p>
+                  <p className="text-xl font-bold text-slate-900">{stats.total}</p>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                  <p className="text-slate-500">Male</p>
+                  <p className="text-xl font-bold text-slate-900">{stats.male}</p>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                  <p className="text-slate-500">Female</p>
+                  <p className="text-xl font-bold text-slate-900">{stats.female}</p>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                  <p className="text-slate-500">Existing</p>
+                  <p className="text-xl font-bold text-slate-900">{stats.existing}</p>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                  <p className="text-slate-500">New</p>
+                  <p className="text-xl font-bold text-slate-900">{stats.new}</p>
+                </div>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.6fr_1fr]">
           <Panel>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Add Patient to System</h2>
@@ -591,48 +596,54 @@ export default function AssistantScreen() {
               ))}
             </div>
           </Panel>
-        </div>
+            </div>
       </main>
+    </div>
+  </div>
 
-      <aside className="sticky top-6 flex h-fit w-24 flex-col items-center justify-between gap-6 rounded-[24px] bg-white/80 px-3 py-6 shadow-lg backdrop-blur">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex size-16 items-center justify-center rounded-full bg-slate-900 text-white shadow-[0_25px_40px_rgba(15,23,42,0.35)]">
-            <AssistantIcon className="size-8" />
-          </div>
-          <div className="h-8 w-px rounded-full bg-slate-200" />
-          <ul className="flex flex-col items-center gap-3">
-            {navigationItems.map((item) => (
-              <li key={item.id}>
-                <Link
-                  href={item.href}
-                  className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 ${
-                    item.id === activeNavigationId
-                      ? 'size-12 bg-slate-900 text-white shadow-[0_18px_32px_rgba(15,23,42,0.35)]'
-                      : 'size-11 bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300'
-                  }`}
-                  aria-label={item.label}
-                  aria-current={item.id === activeNavigationId ? 'page' : undefined}
-                >
-                  <item.icon className="size-5" />
-                  <span className={`pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 ${SHADOWS.tooltip} transition group-hover:scale-100 group-hover:opacity-100`}>
-                    {item.label}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <Link
-          href="/logout"
-          className="group relative flex size-12 items-center justify-center rounded-full border border-rose-100 bg-white text-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.25)] transition hover:-translate-y-0.5 hover:border-rose-200"
-          aria-label="Logout"
-        >
-          <LogoutIcon className="size-5" />
-          <span className={`pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-rose-600 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 ${SHADOWS.tooltip} transition group-hover:scale-100 group-hover:opacity-100`}>
-            Logout
-          </span>
-        </Link>
-      </aside>
+    <aside className="sticky top-0 flex h-screen w-28 flex-col items-center justify-between bg-transparent py-10">
+    <div className="flex flex-col items-center gap-5">
+      <div className="flex size-20 items-center justify-center rounded-full bg-slate-900 text-white shadow-[0_25px_40px_rgba(15,23,42,0.35)]">
+        <AssistantIcon className="size-9" />
+      </div>
+      <div className="h-10 w-px rounded-full bg-slate-200" />
+      <div className="flex flex-col items-center rounded-[999px] border border-slate-100 bg-white/90 px-3 py-6 text-slate-600 shadow-[0_25px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+        <ul className="flex flex-col items-center gap-4">
+          {navigationItems.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 ${
+                  item.id === activeNavigationId
+                    ? 'size-14 bg-slate-800 text-white shadow-[0_18px_32px_rgba(15,23,42,0.35)]'
+                    : 'size-12 bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300'
+                }`}
+                aria-label={item.label}
+                aria-current={item.id === activeNavigationId ? 'page' : undefined}
+              >
+                <item.icon className="size-5" />
+                <span className={`pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 ${SHADOWS.tooltip} transition group-hover:scale-100 group-hover:opacity-100`}>
+                  {item.label}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="h-10 w-px rounded-full bg-slate-200" />
+    </div>
+
+    <Link
+      href="/logout"
+      className="group relative flex size-14 items-center justify-center rounded-full border border-rose-100 bg-white text-rose-500 shadow-[0_12px_24px_rgba(244,63,94,0.25)] transition hover:-translate-y-0.5 hover:border-rose-200"
+      aria-label={logoutItem.label}
+    >
+      <logoutItem.icon className="size-5" />
+      <span className={`pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-rose-600 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 ${SHADOWS.tooltip} transition group-hover:scale-100 group-hover:opacity-100`}>
+        {logoutItem.label}
+      </span>
+    </Link>
+  </aside>
     </div>
   );
 }
