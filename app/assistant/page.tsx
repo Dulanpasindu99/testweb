@@ -72,7 +72,7 @@ const LogoutIcon: IconRenderer = (props) => (
 
 const SHADOWS = {
   card: 'shadow-[0_18px_42px_rgba(28,63,99,0.08)]',
-  tooltip: 'shadow-[0_12px_24px_rgba(15,23,42,0.18)]',
+  tooltip: 'shadow-[0_12px_24px_rgba(0,114,206,0.22)]',
 };
 
 const Panel = ({ children }: { children: React.ReactNode }) => (
@@ -333,7 +333,7 @@ export default function AssistantScreen() {
                   />
                   <button
                     type="button"
-                    className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white"
+                    className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-[11px] font-semibold text-white shadow-[0_10px_22px_rgba(0,114,206,0.22)]"
                     onClick={addAllergy}
                   >
                     Add
@@ -348,8 +348,10 @@ export default function AssistantScreen() {
                     <button
                       key={group}
                       type="button"
-                      className={`rounded-full px-3 py-1 ${
-                        formState.bloodGroup === group ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+                      className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                        formState.bloodGroup === group
+                          ? 'bg-[var(--ioc-blue)] text-white shadow-[0_10px_22px_rgba(0,114,206,0.22)]'
+                          : 'bg-slate-100 text-slate-700'
                       }`}
                       onClick={() => setFormState((p) => ({ ...p, bloodGroup: group }))}
                     >
@@ -405,7 +407,7 @@ export default function AssistantScreen() {
               <h2 className="text-lg font-semibold text-slate-900">Doctor Checked Patient</h2>
               <div className="flex items-center gap-2 text-xs text-slate-600">
                 <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold">03</span>
-                <span className="rounded-full bg-slate-900 px-3 py-1 font-semibold text-white">Patient</span>
+                <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 font-semibold text-white shadow-[0_10px_22px_rgba(0,114,206,0.22)]">Patient</span>
               </div>
             </div>
             {activePrescription ? (
@@ -413,8 +415,8 @@ export default function AssistantScreen() {
                 <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 shadow-inner">
                   <div className="flex items-center justify-between text-xs text-slate-600">
                     <div className="flex items-center gap-3">
-                      <span className="rounded-full bg-slate-900 px-3 py-1 text-white">Patient No</span>
-                      <span className="rounded-full bg-slate-900 px-3 py-1 text-white">{activePrescription.id}</span>
+                      <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">Patient No</span>
+                      <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">{activePrescription.id}</span>
                     </div>
                     <span className="rounded-full bg-lime-100 px-3 py-1 font-semibold text-lime-700">Bill paid</span>
                   </div>
@@ -425,7 +427,7 @@ export default function AssistantScreen() {
                       <p className="text-xs text-slate-500">NIC {activePrescription.nic}</p>
                     </div>
                     <div className="flex items-end justify-end gap-3 text-sm font-semibold text-slate-700">
-                      <span className="rounded-full bg-slate-900 px-4 py-2 text-white">Age {activePrescription.age}</span>
+                      <span className="rounded-full bg-[var(--ioc-blue)] px-4 py-2 text-white">Age {activePrescription.age}</span>
                       <span className={`rounded-full px-4 py-2 ${
                         activePrescription.gender === 'Female'
                           ? 'bg-rose-600 text-white'
@@ -436,11 +438,11 @@ export default function AssistantScreen() {
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold">
-                    <span className="rounded-full bg-slate-900 px-3 py-2 text-white">Disease</span>
-                    <span className="rounded-full bg-slate-900 px-3 py-2 text-white">{activePrescription.diagnosis}</span>
+                    <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-white">Disease</span>
+                    <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-white">{activePrescription.diagnosis}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Allergies</span>
+                    <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-xs font-semibold text-white">Allergies</span>
                     {activePrescription.allergies.map((allergy) => (
                       <span key={allergy} className="rounded-full bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-700">
                         {allergy}
@@ -452,7 +454,7 @@ export default function AssistantScreen() {
                 <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600">
                   <div className="space-y-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-inner">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-slate-900 px-3 py-1 text-white">Clinical Drugs</span>
+                      <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">Clinical Drugs</span>
                       <span className="rounded-full bg-lime-100 px-3 py-1 text-lime-700">Given</span>
                     </div>
                     <div className="space-y-2">
@@ -462,14 +464,14 @@ export default function AssistantScreen() {
                             <p className="text-slate-900">{drug.name}</p>
                             <p className="text-[11px] text-slate-500">{drug.dose} · {drug.terms}</p>
                           </div>
-                          <span className="rounded-full bg-slate-900 px-3 py-1 text-white">{drug.amount}</span>
+                          <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">{drug.amount}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-inner">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-slate-900 px-3 py-1 text-white">Outside Drugs</span>
+                      <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">Outside Drugs</span>
                       <span className="rounded-full bg-orange-100 px-3 py-1 text-orange-700">Pending</span>
                     </div>
                     <div className="space-y-2">
@@ -479,7 +481,7 @@ export default function AssistantScreen() {
                             <p className="text-slate-900">{drug.name}</p>
                             <p className="text-[11px] text-slate-500">{drug.dose} · {drug.terms}</p>
                           </div>
-                          <span className="rounded-full bg-slate-900 px-3 py-1 text-white">{drug.amount}</span>
+                          <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">{drug.amount}</span>
                         </div>
                       ))}
                     </div>
@@ -488,14 +490,14 @@ export default function AssistantScreen() {
 
                 <div className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-inner">
                   <div className="mb-3 flex items-center justify-between text-xs font-semibold text-slate-600">
-                    <span className="rounded-full bg-slate-900 px-3 py-2 text-white">Follow-up Summary</span>
+                    <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-white">Follow-up Summary</span>
                     <span className="rounded-full bg-slate-100 px-3 py-2 text-slate-700">Reviewed with patient</span>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 text-sm text-slate-700 sm:grid-cols-3">
                     <div className="flex flex-col gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                        <span className="rounded-full bg-slate-900 px-3 py-2 text-white">Medical Tests</span>
+                        <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-white">Medical Tests</span>
                         <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">Clear</span>
                       </div>
                       <p className="leading-relaxed">No tests were requested during this visit.</p>
@@ -503,13 +505,13 @@ export default function AssistantScreen() {
 
                     <div className="flex flex-col gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                        <span className="rounded-full bg-slate-900 px-3 py-2 text-white">Notes</span>
+                        <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-white">Notes</span>
                         <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700">None</span>
                       </div>
                       <p className="leading-relaxed">No additional notes were recorded by the doctor.</p>
                     </div>
 
-                    <div className="flex flex-col gap-2 rounded-xl bg-slate-900 p-3 text-white ring-1 ring-slate-800">
+                    <div className="flex flex-col gap-2 rounded-xl bg-[var(--ioc-blue)] p-3 text-white ring-1 ring-[rgba(0,114,206,0.65)] shadow-[0_16px_32px_rgba(0,114,206,0.26)]">
                       <div className="flex items-center justify-between text-xs font-semibold">
                         <span className="rounded-full bg-white/15 px-3 py-2">Next Visit</span>
                         <span className="rounded-full bg-white/15 px-3 py-1">Confirmed</span>
@@ -528,12 +530,12 @@ export default function AssistantScreen() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                    <span className="rounded-full bg-slate-900 px-3 py-2 text-white">Download</span>
+                    <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-2 text-white">Download</span>
                     <span className="rounded-full bg-slate-100 px-3 py-2 text-slate-400 line-through">Medical report locked</span>
                   </div>
                   <button
                     type="button"
-                    className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm"
+                    className="rounded-2xl bg-[var(--ioc-blue)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(0,114,206,0.24)] transition hover:-translate-y-0.5"
                     onClick={markDoneAndNext}
                   >
                     Done & Next
@@ -585,7 +587,7 @@ export default function AssistantScreen() {
                     <p className="text-[11px] text-slate-500">NIC {entry.nic}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-slate-900 px-3 py-1 text-white">Age {entry.age}</span>
+                    <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">Age {entry.age}</span>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">{entry.time}</span>
                   </div>
                 </div>
@@ -599,26 +601,26 @@ export default function AssistantScreen() {
 
     <aside className="sticky top-0 flex h-screen w-28 flex-col items-center justify-between bg-transparent py-10">
     <div className="flex flex-col items-center gap-5">
-      <div className="flex size-20 items-center justify-center rounded-full bg-slate-900 text-white shadow-[0_25px_40px_rgba(15,23,42,0.35)]">
+      <div className="flex size-20 items-center justify-center rounded-full bg-[var(--ioc-blue)] text-white shadow-[0_25px_40px_rgba(0,114,206,0.35)]">
         <AssistantIcon className="size-9" />
       </div>
       <div className="h-10 w-px rounded-full bg-slate-200" />
-      <div className="flex flex-col items-center rounded-[999px] border border-slate-100 bg-white/90 px-3 py-6 text-slate-600 shadow-[0_25px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+      <div className="flex flex-col items-center rounded-[999px] border border-sky-100 bg-[rgba(0,114,206,0.08)] px-3 py-6 text-slate-600 shadow-[0_25px_45px_rgba(0,114,206,0.12)] backdrop-blur">
         <ul className="flex flex-col items-center gap-4">
           {navigationItems.map((item) => (
             <li key={item.id}>
               <Link
                 href={item.href}
-                className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 ${
+                className={`group relative flex items-center justify-center rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ioc-blue)] ${
                   item.id === activeNavigationId
-                    ? 'size-14 bg-slate-800 text-white shadow-[0_18px_32px_rgba(15,23,42,0.35)]'
-                    : 'size-12 bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300'
+                    ? 'size-14 bg-[var(--ioc-blue)] text-white shadow-[0_18px_32px_rgba(0,114,206,0.28)]'
+                    : 'size-12 bg-white text-slate-500 ring-1 ring-sky-100 hover:ring-sky-200'
                 }`}
                 aria-label={item.label}
                 aria-current={item.id === activeNavigationId ? 'page' : undefined}
               >
                 <item.icon className="size-5" />
-                <span className={`pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 ${SHADOWS.tooltip} transition group-hover:scale-100 group-hover:opacity-100`}>
+                <span className={`pointer-events-none absolute right-full mr-3 origin-right scale-90 rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-white opacity-0 ${SHADOWS.tooltip} transition group-hover:scale-100 group-hover:opacity-100`}>
                   {item.label}
                 </span>
               </Link>

@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --ioc-blue: #0072ce;
 }
 
 @theme inline {
@@ -19,10 +20,16 @@ body {
   height: 100%;
 }
 
+html {
+  font-size: clamp(15px, 0.65vw + 14px, 18px);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   min-height: 100%;
   overflow-y: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }

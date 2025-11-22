@@ -88,11 +88,11 @@ export default function Login() {
               <h2 className="mt-3 text-xl font-bold text-slate-900">Owner login</h2>
             </div>
             <Link
-                href="/owner"
-                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-900/25"
-              >
-                Go to owner tools
-              </Link>
+              href="/owner"
+              className="rounded-full bg-[var(--ioc-blue)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-[0_12px_28px_rgba(0,114,206,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,114,206,0.38)]"
+            >
+              Go to owner tools
+            </Link>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -137,7 +137,7 @@ export default function Login() {
                     placeholder="••••••••"
                   />
                 </div>
-                <button className="mt-4 w-full rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-900/25">
+                <button className="mt-4 w-full rounded-full bg-[var(--ioc-blue)] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(0,114,206,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,114,206,0.38)]">
                   Continue as doctor
                 </button>
               </Card>
