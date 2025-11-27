@@ -944,9 +944,6 @@ export default function MedLinkDoctorDashboard() {
                 ))}
               </div>
 
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Status colors: Green = Active · Red/Orange = Allergy
-              </p>
             </Card>
 
           </div>
