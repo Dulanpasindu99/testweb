@@ -106,7 +106,7 @@ export function NavigationPanel({
 
   const content = (
     <aside
-      className={`fixed inset-x-4 bottom-4 z-30 flex items-center gap-4 rounded-[28px] border border-white/60 bg-white/70 px-4 py-3 shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl transition-all md:inset-auto md:right-4 md:top-4 md:bottom-4 md:w-24 md:flex-col md:px-4 md:py-5 lg:right-6 lg:top-6 lg:bottom-6 lg:w-28 ${className}`}
+      className={`nav-rail fixed inset-x-4 bottom-4 z-30 flex items-center gap-4 rounded-full px-4 py-3 transition-all md:inset-auto md:right-4 md:top-4 md:bottom-4 md:w-24 md:flex-col md:px-4 md:py-5 lg:right-6 lg:top-6 lg:bottom-6 lg:w-28 ${className}`}
     >
       <div className="flex items-center gap-4 md:flex-col md:gap-6">
         <div className="flex size-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-[0_22px_36px_rgba(15,23,42,0.28)]">
