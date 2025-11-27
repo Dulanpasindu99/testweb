@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useMemo, useState } from 'react';
 import { AssistantIcon } from '../components/NavigationPanel';
 import { NavigationPageShell } from '../components/NavigationPageShell';
+import { getProfileIdByNicOrName } from '../patients/patientProfiles';
 
 const SHADOWS = {
   card: 'shadow-[0_18px_42px_rgba(28,63,99,0.08)]',
@@ -25,6 +27,14 @@ interface Prescription {
   outside: { name: string; dose: string; terms: string; amount: number }[];
   allergies: string[];
 }
+
+type CompletedPatient = {
+  name: string;
+  age: number;
+  nic: string;
+  time: string;
+  profileId?: string;
+};
 
 export default function AssistantScreen() {
   const [pendingPatients, setPendingPatients] = useState<Prescription[]>([
@@ -89,12 +99,36 @@ export default function AssistantScreen() {
     []
   );
 
-  const completed = useMemo(
+  const completed = useMemo<CompletedPatient[]>(
     () => [
-      { name: 'Rani Fernando', age: 34, nic: '856456456V', time: '5.45 PM' },
-      { name: 'Sathya Dev', age: 65, nic: '222343222V', time: '5.25 PM' },
-      { name: 'Chathura Deshan', age: 32, nic: '865637762V', time: '5.00 PM' },
-      { name: 'Rathmalie De Silva', age: 42, nic: '650002343V', time: '4.15 PM' },
+      {
+        name: 'Rani Fernando',
+        age: 34,
+        nic: '856456456V',
+        time: '5.45 PM',
+        profileId: getProfileIdByNicOrName('856456456V', 'Rani Fernando'),
+      },
+      {
+        name: 'Sathya Dev',
+        age: 65,
+        nic: '222343222V',
+        time: '5.25 PM',
+        profileId: getProfileIdByNicOrName('222343222V', 'Sathya Dev'),
+      },
+      {
+        name: 'Chathura Deshan',
+        age: 32,
+        nic: '865637762V',
+        time: '5.00 PM',
+        profileId: getProfileIdByNicOrName('865637762V', 'Chathura Deshan'),
+      },
+      {
+        name: 'Rathmalie De Silva',
+        age: 42,
+        nic: '650002343V',
+        time: '4.15 PM',
+        profileId: getProfileIdByNicOrName('650002343V', 'Rathmalie De Silva'),
+      },
     ],
     []
   );
@@ -500,9 +534,10 @@ export default function AssistantScreen() {
             </div>
             <div className="mt-3 space-y-2">
               {filteredCompleted.map((entry) => (
-                <div
+                <Link
                   key={entry.nic}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-700"
+                  href={entry.profileId ? `/patients/${entry.profileId}` : '/patients'}
+                  className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-700 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:ring-1 hover:ring-sky-200"
                 >
                   <div>
                     <p className="font-semibold text-slate-900">{entry.name}</p>
@@ -512,7 +547,7 @@ export default function AssistantScreen() {
                     <span className="rounded-full bg-[var(--ioc-blue)] px-3 py-1 text-white">Age {entry.age}</span>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">{entry.time}</span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </Panel>

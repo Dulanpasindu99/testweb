@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useMemo, useState } from 'react';
 import { PatientsIcon } from '../components/NavigationPanel';
 import { NavigationPageShell } from '../components/NavigationPageShell';
+import { getProfileIdByNicOrName } from './patientProfiles';
 
 type Gender = 'Male' | 'Female';
 
@@ -19,6 +21,7 @@ type Patient = {
   nextAppointment?: string;
   tags: string[];
   conditions: string[];
+  profileId?: string;
 };
 
 const SHADOWS = {
@@ -72,6 +75,7 @@ const patients: Patient[] = [
     nextAppointment: 'Today 6:30 PM',
     tags: ['Diabetes', 'Hypertension'],
     conditions: ['Sinus Problem', 'Special Notes'],
+    profileId: getProfileIdByNicOrName('74526489V', 'Ranil Wickramasinghe'),
   },
   {
     id: 'p-02',
@@ -86,6 +90,7 @@ const patients: Patient[] = [
     nextAppointment: 'Today 6:30 PM',
     tags: ['Diabetes', 'Heart Problem', 'Allergy'],
     conditions: ['Medical Notes', 'Special Notes'],
+    profileId: getProfileIdByNicOrName('7423665V', 'Chandraka Bandaranayaka'),
   },
   {
     id: 'p-03',
@@ -99,6 +104,7 @@ const patients: Patient[] = [
     lastVisit: '3 weeks ago',
     tags: ['Arthritis'],
     conditions: ['Medical Notes', 'Special Notes'],
+    profileId: getProfileIdByNicOrName('7423665V', 'Mahinda Rajapaksha'),
   },
 ];
 
@@ -302,7 +308,14 @@ export default function PatientManagement() {
                         ))}
                       </div>
                     </div>
-                    <button className="ios-button-primary w-full text-center text-sm">View patient profile</button>
+                    {patient.profileId ? (
+                      <Link
+                        href={`/patients/${patient.profileId}`}
+                        className="ios-button-primary w-full text-center text-sm"
+                      >
+                        View patient profile
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               </article>

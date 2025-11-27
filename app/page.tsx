@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { IconRenderer } from './components/NavigationPanel';
 import { DoctorIcon } from './components/NavigationPanel';
 import { NavigationPageShell } from './components/NavigationPageShell';
+import { getProfileIdByNicOrName } from './patients/patientProfiles';
 
 // ---- Types ----
 interface Patient {
@@ -14,6 +16,7 @@ interface Patient {
   reason: string;
   age: number;
   gender: string;
+  profileId?: string;
 }
 
 interface ClinicalDrug {
@@ -74,6 +77,7 @@ const MicIcon: IconRenderer = (props) => (
 export default function MedLinkDoctorDashboard() {
   // ------ Constants ------
   const CAPACITY = 40; // soft cap used to render the compact capacity meter
+  const router = useRouter();
 
   // ------ Clock (used only for internal tests, not rendered) ------
   const [now, setNow] = useState<Date>(new Date());
@@ -98,6 +102,7 @@ export default function MedLinkDoctorDashboard() {
         reason: 'Fever, Headache',
         age: 66,
         gender: 'Male',
+        profileId: getProfileIdByNicOrName('61524862V', 'Premadasa'),
       },
       {
         id: 'p2',
@@ -107,6 +112,7 @@ export default function MedLinkDoctorDashboard() {
         reason: 'Stomach Ache, Headache',
         age: 62,
         gender: 'Male',
+        profileId: getProfileIdByNicOrName('64524862V', 'JR Jayawardhana'),
       },
       {
         id: 'p3',
@@ -116,6 +122,7 @@ export default function MedLinkDoctorDashboard() {
         reason: 'Fever',
         age: 68,
         gender: 'Male',
+        profileId: getProfileIdByNicOrName('78522862V', 'Mitreepala Siirisena'),
       },
       {
         id: 'p4',
@@ -125,6 +132,7 @@ export default function MedLinkDoctorDashboard() {
         reason: 'Fever, Headache',
         age: 63,
         gender: 'Female',
+        profileId: getProfileIdByNicOrName('71524862V', 'Chandrika Bandranayake'),
       },
       {
         id: 'p5',
@@ -134,6 +142,7 @@ export default function MedLinkDoctorDashboard() {
         reason: 'Fever, Headache',
         age: 76,
         gender: 'Male',
+        profileId: getProfileIdByNicOrName('77524862V', 'Ranil Vicramasinghe'),
       },
       {
         id: 'p6',
@@ -143,6 +152,7 @@ export default function MedLinkDoctorDashboard() {
         reason: 'Headache',
         age: 66,
         gender: 'Male',
+        profileId: getProfileIdByNicOrName('74524862V', 'Mahinda Rajapakshe'),
       },
     ],
     []
@@ -424,8 +434,6 @@ export default function MedLinkDoctorDashboard() {
 
   const chipsPendingRemovalRef = useRef(chipsPendingRemoval);
 
-  const diseaseQuickTags = selectedDiseases;
-
   const normalizeDiseaseSuggestions = (payload: unknown, query: string): string[] => {
     if (!Array.isArray(payload)) return [];
 
@@ -660,115 +668,9 @@ export default function MedLinkDoctorDashboard() {
     existingPatients,
   ]);
 
-  const buildPatientDetailMarkup = (patient: Patient) => {
-    const drugRows = [
-      ...sheet.clinical.map((drug) => ({ name: drug, dose: '—', terms: '', amount: '—', source: 'Clinical D.' })),
-      ...sheet.outside.map((item) => ({
-        name: item.name,
-        dose: item.dose,
-        terms: item.terms,
-        amount: String(item.amount),
-        source: 'Outside D.',
-      })),
-    ];
-
-    const drugList = drugRows
-      .map(
-        (drug) =>
-          `<li style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:8px 0;font-size:14px;color:#0f172a;">` +
-          `<div>` +
-          `<div style="font-weight:700;">${drug.name}</div>` +
-          `<div style="color:#64748b;font-size:12px;">${drug.dose}${drug.terms ? ` · ${drug.terms}` : ''}</div>` +
-          `</div>` +
-          `<div style="display:flex;align-items:center;gap:8px;">` +
-          `<span style="border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800;text-transform:uppercase;background:${
-            drug.source === 'Clinical D.' ? '#0f172a' : '#fef3c7'
-          };color:${drug.source === 'Clinical D.' ? 'white' : '#78350f'};">${drug.source}</span>` +
-          `<span style="border-radius:12px;background:#0f172a;color:white;padding:6px 10px;font-weight:700;font-size:12px;">${drug.amount}</span>` +
-          `</div>` +
-          `</li>`
-      )
-      .join('');
-    const testsList = selectedTests
-      .map((test) => `<span class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">${test}</span>`)
-      .join('');
-
-    return `<!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charSet="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>${patient.name} — Patient Preview</title>
-          <style>
-            * { box-sizing: border-box; font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; }
-            body { margin: 0; padding: 24px; background: #f8fafc; color: #0f172a; }
-            .card { border-radius: 28px; background: white; box-shadow: 0 24px 64px rgba(14,116,144,0.18); padding: 20px; max-width: 520px; margin: 0 auto; border: 1px solid rgba(148,163,184,0.25); }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; }
-            .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; }
-            .pill.dark { background: #0f172a; color: white; box-shadow: 0 8px 24px rgba(15,23,42,0.24); }
-            .pill.solid { background: #0ea5e9; color: white; box-shadow: 0 8px 20px rgba(14,165,233,0.3); }
-            .title { font-size: 22px; font-weight: 800; margin: 4px 0; }
-            .subtitle { color: #475569; font-weight: 600; }
-            .section { margin-top: 18px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
-            .section h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #6b7280; }
-            .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
-            .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
-            .chip { background: #f8fafc; color: #0f172a; border-radius: 999px; padding: 10px 14px; font-weight: 700; box-shadow: inset 0 1px 0 rgba(148,163,184,0.35); }
-            .footer-btn { margin-top: 18px; width: 100%; background: #0f172a; color: white; padding: 12px 16px; border-radius: 14px; border: none; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="header">
-              <div>
-                <div class="title">${patient.name}</div>
-                <div class="subtitle">${patient.nic}</div>
-                <div class="subtitle">${patient.reason}</div>
-              </div>
-              <div>
-                <div class="subtitle" style="text-align:right;">Age <span style="font-size:20px;font-weight:800;">${patient.age}</span></div>
-                <div class="pill solid" style="justify-content:flex-end;">${patient.gender}</div>
-              </div>
-            </div>
-            <div class="section">
-              <h3>Disease</h3>
-              <div class="chip-row">
-                ${diseaseQuickTags.map((tag) => `<span class="chip">${tag}</span>`).join('')}
-              </div>
-            </div>
-            <div class="section grid">
-              <div>
-                <h3>Drugs</h3>
-                <ul style="list-style:none;padding:0;margin:0;">${drugList}</ul>
-              </div>
-              <div>
-                <h3>Medical Tests</h3>
-                <div class="chip-row">${testsList}</div>
-              </div>
-            </div>
-            <div class="section">
-              <h3>Special Notes</h3>
-              <div class="subtitle">${sheet.notes}</div>
-              <div class="subtitle" style="margin-top:12px;">Next Visit Date</div>
-              <div class="title" style="font-size:16px;">${nextVisitDate}</div>
-            </div>
-            <button class="footer-btn" type="button">Download as Report</button>
-          </div>
-        </body>
-      </html>`;
-  };
-
-  const openPatientPreview = (patient: Patient) => {
-    const popup = window.open('', '_blank', 'width=640,height=900');
-    if (!popup) return;
-    popup.document.write(buildPatientDetailMarkup(patient));
-    popup.document.close();
-    popup.focus();
-  };
-
   const handleSearchSelect = (patient: Patient) => {
-    setSearch(patient.name);
-    openPatientPreview(patient);
+    const profileId = patient.profileId || getProfileIdByNicOrName(patient.nic, patient.name);
+    router.push(profileId ? `/patients/${profileId}` : '/patients');
   };
 
   return (
