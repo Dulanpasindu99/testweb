@@ -187,6 +187,24 @@ body {
   }
 }
 
+@keyframes modal-pop {
+  from {
+    transform: translateY(18px) scale(0.96);
+    filter: blur(8px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-6px) scale(1.02);
+    filter: blur(2px);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+    opacity: 1;
+  }
+}
+
 .ios-nav-button {
   position: relative;
   overflow: hidden;
