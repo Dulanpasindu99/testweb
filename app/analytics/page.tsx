@@ -22,6 +22,27 @@ const SHADOWS = {
   chip: 'shadow-[0_10px_24px_rgba(15,23,42,0.08)]',
 } as const;
 
+const TileCard: React.FC<{ className?: string; tone?: 'sky' | 'slate' | 'emerald' | 'pink'; children: React.ReactNode }> = ({
+  className = '',
+  tone = 'slate',
+  children,
+}) => {
+  const palette = {
+    sky: 'from-sky-50/80 to-white',
+    slate: 'from-white to-slate-50/70',
+    emerald: 'from-emerald-50/80 to-white',
+    pink: 'from-rose-50/80 to-white',
+  } as const;
+
+  return (
+    <div
+      className={`relative rounded-3xl border border-white/80 bg-gradient-to-br ${palette[tone]} p-4 shadow-[0_18px_48px_rgba(15,23,42,0.08)] ring-1 ring-slate-100/70 ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
 const diseaseRecords: DiseaseRecord[] = [
   {
     id: 'd-01',
@@ -239,6 +260,47 @@ export default function AnalyticsCommandCenter() {
     return { targetDisease, latest, previous, latestCount, prevCount, delta, percentageChange };
   }, [filteredRecords, months, compareDisease]);
 
+  const totalMale = useMemo(() => filteredRecords.filter((entry) => entry.gender === 'Male').length, [filteredRecords]);
+  const totalFemale = useMemo(() => filteredRecords.filter((entry) => entry.gender === 'Female').length, [filteredRecords]);
+
+  const sourceSplit = useMemo(
+    () => ({
+      clinic: filteredRecords.filter((entry) => entry.source === 'Clinic').length,
+      outside: filteredRecords.filter((entry) => entry.source === 'Outside').length,
+    }),
+    [filteredRecords]
+  );
+
+  const uniqueDiseases = useMemo(() => new Set(filteredRecords.map((entry) => entry.disease)).size, [filteredRecords]);
+  const averageRecurrence = useMemo(
+    () => (filteredRecords.length === 0 ? 0 : filteredRecords.reduce((sum, item) => sum + item.recurrence, 0) / filteredRecords.length),
+    [filteredRecords]
+  );
+
+  const latestMonthLabel = useMemo(() => {
+    const lastMonth = months[months.length - 1];
+    return lastMonth ? monthName(lastMonth) : 'Latest month';
+  }, [months]);
+
+  const sparkline = useMemo(() => {
+    if (!monthlyTrend.length) return { path: '', area: '' };
+    const width = 260;
+    const height = 82;
+    const maxValue = Math.max(...monthlyTrend.map((item) => item.count), 1);
+    const coordinates = monthlyTrend.map((item, index) => {
+      const x = (index / Math.max(monthlyTrend.length - 1, 1)) * width;
+      const y = height - (item.count / maxValue) * height;
+      return { x, y };
+    });
+
+    const line = coordinates.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+    const area = `${line} L ${width} ${height} L 0 ${height} Z`;
+
+    return { path: line, area };
+  }, [monthlyTrend]);
+
+  const topFourDiseases = useMemo(() => diseaseBreakdown.slice(0, 4), [diseaseBreakdown]);
+
   const handleDownload = () => {
     const payload = {
       generatedAt: new Date().toISOString(),
@@ -268,382 +330,410 @@ export default function AnalyticsCommandCenter() {
   return (
     <NavigationPageShell activeId="stats" accentIcon={StatsIcon}>
       <main className="relative isolate min-h-screen px-4 py-6 text-slate-900 sm:px-6 md:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <header className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
-            <span className="inline-flex h-2 w-2 rounded-full bg-sky-500 shadow-[0_0_0_6px_rgba(14,165,233,0.18)]" />
-            Insights control room
-          </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
+        <div className="mx-auto max-w-6xl space-y-5">
+          <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+                <span className="inline-flex h-2 w-2 rounded-full bg-sky-500 shadow-[0_0_0_6px_rgba(14,165,233,0.18)]" />
+                Insights control room
+                <span className="rounded-full bg-slate-900 px-2 py-1 text-[10px] font-semibold text-white">Live</span>
+              </div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">Disease Intelligence</h1>
-              <p className="text-sm text-slate-600">
-                Interactive infographics, filters, comparisons, and exportable reports to understand how patients arrive with
-                different conditions.
-              </p>
+              <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+                <span className={`ios-chip bg-white/80 text-[11px] text-slate-700 ${SHADOWS.chip}`}>Tiles</span>
+                <span className={`ios-chip bg-white/80 text-[11px] text-slate-700 ${SHADOWS.chip}`}>Infographics</span>
+                <span className={`ios-chip bg-white/80 text-[11px] text-slate-700 ${SHADOWS.chip}`}>Responsive</span>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
-              <span className={`ios-chip bg-white/80 text-[11px] text-slate-700 ${SHADOWS.chip}`}>Charts</span>
-              <span className={`ios-chip bg-white/80 text-[11px] text-slate-700 ${SHADOWS.chip}`}>Filters</span>
-              <span className={`ios-chip bg-white/80 text-[11px] text-slate-700 ${SHADOWS.chip}`}>Reports</span>
+            <div className="flex flex-wrap gap-2 text-sm font-semibold text-slate-700">
+              <button
+                onClick={handleDownload}
+                className="ios-button-primary rounded-2xl px-4 py-2 text-xs shadow-[0_14px_28px_rgba(14,165,233,0.35)]"
+              >
+                ⬇️ Export JSON
+              </button>
+              <button
+                onClick={resetFilters}
+                className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
+              >
+                🔄 Reset
+              </button>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <section className={`ios-surface ${SHADOWS.card} p-6 md:p-7`}>
-          <div className="grid gap-4 lg:grid-cols-[2fr,1.1fr]">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-2xl border border-slate-100/80 bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total filtered patients</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{filteredRecords.length}</p>
-                <p className="text-xs text-slate-500">Out of {diseaseRecords.length} recorded visits</p>
-              </div>
-              <div className="rounded-2xl border border-slate-100/80 bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Families represented</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{activeFamilies.size}</p>
-                <p className="text-xs text-slate-500">
-                  {toPercentage(activeFamilies.size, allFamilies.size)}% of total families ({allFamilies.size})
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-100/80 bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Most frequent disease</p>
-                <p className="mt-2 text-xl font-bold text-slate-900">{topDisease?.disease ?? '—'}</p>
-                {topDisease ? (
-                  <p className="text-xs text-slate-500">
-                    {topDisease.total} visits • {topDisease.male} male / {topDisease.female} female • Avg age{' '}
-                    {Math.round(
-                      topDisease.ages.reduce((sum, age) => sum + age, 0) / Math.max(topDisease.ages.length, 1)
-                    )}
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-500">Adjust filters to see details</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-100/80 bg-white/90 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Report actions</p>
-                <div className="flex gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-                  <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-700">Share</span>
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">Export</span>
+          <div className="grid auto-rows-fr gap-4 lg:grid-cols-4">
+            <TileCard className="lg:col-span-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Filtered visits</p>
+                  <div className="flex items-baseline gap-3">
+                    <p className="text-4xl font-bold leading-tight text-slate-900">{filteredRecords.length}</p>
+                    <span className="rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
+                      {uniqueDiseases} diseases
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">{toPercentage(filteredRecords.length, diseaseRecords.length)}% of {diseaseRecords.length} visits</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Families</p>
+                  <p className="text-3xl font-bold text-slate-900">{activeFamilies.size}</p>
+                  <p className="text-xs text-slate-500">{toPercentage(activeFamilies.size, allFamilies.size)}% coverage</p>
                 </div>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:-translate-y-0.5"
-                >
-                  <span aria-hidden>⬇️</span> Download as report
-                </button>
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
-                >
-                  <span aria-hidden>🔄</span> Reset filters
-                </button>
-              </div>
-              <p className="text-xs text-slate-500">
-                Exports include disease counts by gender, family distribution, and monthly trend snapshots for your current
-                filters.
-              </p>
-            </div>
-          </div>
-        </section>
 
-        <section className={`ios-surface ${SHADOWS.card} p-6 md:p-7`}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex flex-1 flex-wrap gap-3">
-              <div className={`flex flex-1 items-center gap-3 rounded-2xl border border-slate-100 bg-white/90 px-4 py-3 ${SHADOWS.inset}`}>
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5 text-slate-500"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <circle cx="11" cy="11" r="6" />
-                  <path d="M16 16l4 4" />
+              <div className="mt-4 overflow-hidden rounded-2xl bg-white/80 p-3 ring-1 ring-slate-100">
+                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <span>Flow</span>
+                  <span>{latestMonthLabel}</span>
+                </div>
+                <svg viewBox="0 0 260 100" className="mt-2 h-24 w-full text-sky-500">
+                  <defs>
+                    <linearGradient id="spark" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.08" />
+                    </linearGradient>
+                  </defs>
+                  {sparkline.area && <path d={sparkline.area} fill="url(#spark)" />}
+                  {sparkline.path && <path d={sparkline.path} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />}
                 </svg>
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search disease, patient, or family"
-                  className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                <div className="mt-3 grid grid-cols-3 gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  <div className="rounded-xl bg-sky-50/70 px-3 py-2 text-sky-700">
+                    <p className="text-lg font-bold text-slate-900">{totalMale}</p>
+                    <p>Male</p>
+                  </div>
+                  <div className="rounded-xl bg-rose-50/70 px-3 py-2 text-rose-600">
+                    <p className="text-lg font-bold text-slate-900">{totalFemale}</p>
+                    <p>Female</p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50/70 px-3 py-2 text-emerald-700">
+                    <p className="text-lg font-bold text-slate-900">{averageRecurrence.toFixed(1)}x</p>
+                    <p>Recurrence</p>
+                  </div>
+                </div>
+              </div>
+            </TileCard>
+
+            <TileCard tone="sky">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Dominant condition</span>
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] text-slate-700">Top</span>
+              </div>
+              {topDisease ? (
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xl font-bold text-slate-900">{topDisease.disease}</p>
+                    <div className="rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
+                      {topDisease.total} visits
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+                    <div className="rounded-xl bg-white/70 p-3">
+                      <p className="text-xl font-bold text-slate-900">{topDisease.male}</p>
+                      <p>Male</p>
+                    </div>
+                    <div className="rounded-xl bg-white/70 p-3">
+                      <p className="text-xl font-bold text-slate-900">{topDisease.female}</p>
+                      <p>Female</p>
+                    </div>
+                    <div className="rounded-xl bg-white/70 p-3">
+                      <p className="text-xl font-bold text-slate-900">{Math.round(topDisease.ages.reduce((sum, age) => sum + age, 0) / Math.max(topDisease.ages.length, 1))}</p>
+                      <p>Avg age</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-xs font-semibold text-slate-600">
+                    <div className="flex items-center justify-between">
+                      <span>Clinic</span>
+                      <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-700">
+                        {filteredRecords.filter((entry) => entry.source === 'Clinic' && entry.disease === topDisease.disease).length}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Outside</span>
+                      <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
+                        {filteredRecords.filter((entry) => entry.source === 'Outside' && entry.disease === topDisease.disease).length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-slate-500">Adjust filters to see the dominant profile.</p>
+              )}
+            </TileCard>
+
+            <TileCard tone="emerald">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Month over month</span>
+                <select
+                  value={compareDisease}
+                  onChange={(event) => setCompareDisease(event.target.value)}
+                  className="rounded-xl border border-emerald-100 bg-white/80 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm"
+                >
+                  {diseaseNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-2xl font-bold text-slate-900">{comparison.latestCount}</p>
+                  <p>{comparison.latest ? monthName(comparison.latest) : 'Latest'}</p>
+                </div>
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-2xl font-bold text-slate-900">{comparison.prevCount}</p>
+                  <p>{comparison.previous ? monthName(comparison.previous) : 'Prev'}</p>
+                </div>
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-2xl font-bold text-slate-900">{comparison.delta >= 0 ? '+' : ''}{comparison.delta}</p>
+                  <p>Shift</p>
+                </div>
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-emerald-100">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all"
+                  style={{ width: `${Math.min(100, Math.max(0, comparison.percentageChange + 100)) / 2}%` }}
                 />
               </div>
-              <select
-                value={gender}
-                onChange={(event) => setGender(event.target.value as typeof gender)}
-                className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm"
-              >
-                <option value="all">All genders</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-              <select
-                value={family}
-                onChange={(event) => setFamily(event.target.value)}
-                className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm"
-              >
-                <option value="all">All families</option>
-                {families.map((familyName) => (
-                  <option key={familyName} value={familyName}>
-                    {familyName}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={disease}
-                onChange={(event) => setDisease(event.target.value)}
-                className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm"
-              >
-                <option value="all">All diseases</option>
-                {diseaseNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={month}
-                onChange={(event) => setMonth(event.target.value)}
-                className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm"
-              >
-                <option value="all">All months</option>
-                {months.map((monthKey) => (
-                  <option key={monthKey} value={monthKey}>
-                    {monthName(monthKey)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white/80 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-sky-500 shadow-[0_0_0_6px_rgba(14,165,233,0.18)]" />
-              Live filters active
-            </div>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{comparison.percentageChange}% swing</p>
+            </TileCard>
           </div>
 
-          <div className="mt-6 grid gap-5 lg:grid-cols-[1.5fr,1fr]">
-            <div className="rounded-3xl border border-slate-100 bg-white/90 p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Disease mix</p>
-                  <h3 className="text-lg font-bold text-slate-900">Counts by disease and gender</h3>
+          <div className="grid auto-rows-fr gap-4 lg:grid-cols-4">
+            <TileCard className="lg:col-span-2" tone="sky">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Trend line</span>
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] text-slate-700">{disease === 'all' ? 'All diseases' : disease}</span>
+              </div>
+              <div className="mt-4 grid gap-4 lg:grid-cols-[1.3fr,0.7fr]">
+                <div className="overflow-hidden rounded-2xl bg-white/80 p-3 ring-1 ring-slate-100">
+                  <svg viewBox="0 0 320 140" className="h-36 w-full text-sky-500">
+                    <defs>
+                      <linearGradient id="trendArea" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.06" />
+                      </linearGradient>
+                    </defs>
+                    {sparkline.area && <path d={sparkline.area.replaceAll('260', '320')} fill="url(#trendArea)" />}
+                    {sparkline.path && <path d={sparkline.path.replaceAll('260', '320')} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />}
+                  </svg>
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    {monthlyTrend.slice(-3).map((item) => (
+                      <div key={item.month} className="rounded-xl bg-sky-50/80 px-3 py-2 text-sky-700">
+                        <p className="text-lg font-bold text-slate-900">{item.count}</p>
+                        <p>{monthName(item.month)}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-sky-700">
-                    <span className="h-2 w-2 rounded-full bg-sky-500" /> Male
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-rose-600">
-                    <span className="h-2 w-2 rounded-full bg-rose-500" /> Female
-                  </span>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="rounded-2xl bg-white/80 p-3 ring-1 ring-slate-100">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Source split</p>
+                    <div className="mt-2 flex items-center justify-between text-sm font-semibold text-slate-700">
+                      <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-700">Clinic {sourceSplit.clinic}</span>
+                      <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700">Outside {sourceSplit.outside}</span>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full bg-gradient-to-r from-sky-400 to-sky-600"
+                        style={{ width: `${toPercentage(sourceSplit.clinic, Math.max(1, sourceSplit.clinic + sourceSplit.outside))}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-white/80 p-3 ring-1 ring-slate-100">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Families touched</p>
+                    <p className="mt-1 text-2xl font-bold text-slate-900">{activeFamilies.size}</p>
+                    <p className="text-xs text-slate-500">{toPercentage(activeFamilies.size, allFamilies.size)}% of {allFamilies.size}</p>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                      {[...activeFamilies].slice(0, 3).map((familyName) => (
+                        <span key={familyName} className="rounded-xl bg-slate-50 px-2 py-2 text-slate-700">
+                          {familyName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 space-y-4">
-                {diseaseBreakdown.length === 0 && (
-                  <p className="text-sm text-slate-500">No results for the selected filters. Try expanding the search.</p>
-                )}
-                {diseaseBreakdown.map((item) => {
+            </TileCard>
+
+            <TileCard tone="pink">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Gender mix</span>
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] text-slate-700">{totalMale + totalFemale} people</span>
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <div className="relative h-28 w-28 rounded-full bg-white/70">
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `conic-gradient(#0ea5e9 ${toPercentage(totalMale, totalMale + totalFemale)}%, #fb7185 0)`,
+                    }}
+                  />
+                  <div className="absolute inset-3 rounded-full bg-white/90" />
+                  <div className="absolute inset-6 flex items-center justify-center rounded-full bg-slate-50">
+                    <p className="text-lg font-bold text-slate-900">{toPercentage(totalMale, totalMale + totalFemale)}%</p>
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2 text-sm font-semibold text-slate-700">
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 ring-1 ring-sky-100">
+                    <span className="inline-flex items-center gap-2 text-sky-600">
+                      <span className="h-2 w-2 rounded-full bg-sky-500" /> Male
+                    </span>
+                    <span>{totalMale}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 ring-1 ring-rose-100">
+                    <span className="inline-flex items-center gap-2 text-rose-600">
+                      <span className="h-2 w-2 rounded-full bg-rose-500" /> Female
+                    </span>
+                    <span>{totalFemale}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 ring-1 ring-slate-100">
+                    <span className="text-slate-600">Unique diseases</span>
+                    <span>{uniqueDiseases}</span>
+                  </div>
+                </div>
+              </div>
+            </TileCard>
+
+            <TileCard tone="emerald">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Check-in pace</span>
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] text-slate-700">Monthly</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-slate-700">
+                {monthlyTrend.slice(-4).map((item) => (
+                  <div key={item.month} className="rounded-xl bg-white/80 p-3 ring-1 ring-emerald-100">
+                    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-emerald-700">
+                      <span>{monthName(item.month)}</span>
+                      <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700">{item.count}</span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"
+                        style={{ width: `${Math.min(100, item.count * 20)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Flow kept compact inside tiles</p>
+            </TileCard>
+          </div>
+
+          <div className="grid auto-rows-fr gap-4 lg:grid-cols-4">
+            <TileCard className="lg:col-span-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Conditions board</span>
+                <span className="rounded-full bg-slate-900/90 px-3 py-1 text-[10px] font-semibold text-white">{topFourDiseases.length} tiles</span>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {topFourDiseases.map((item) => {
                   const total = item.male + item.female;
                   const maleWidth = total === 0 ? 0 : Math.round((item.male / total) * 100);
                   const femaleWidth = total === 0 ? 0 : 100 - maleWidth;
 
                   return (
-                    <div key={item.disease} className="rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-sky-50/60 p-4 shadow-sm">
+                    <div key={item.disease} className="rounded-2xl bg-white/80 p-4 ring-1 ring-slate-100">
                       <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
                         <div className="flex items-center gap-2">
                           <span className="inline-flex h-2 w-2 rounded-full bg-sky-500 shadow-[0_0_0_6px_rgba(14,165,233,0.18)]" />
                           {item.disease}
                         </div>
-                        <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{item.total} patients</div>
+                        <span className="rounded-full bg-slate-900/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+                          {item.total} pts
+                        </span>
                       </div>
                       <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full bg-gradient-to-r from-sky-400 to-sky-500"
-                          style={{ width: `${maleWidth}%` }}
-                        />
-                        <div
-                          className="h-full bg-gradient-to-r from-rose-400 to-rose-500"
-                          style={{ width: `${femaleWidth}%` }}
-                        />
+                        <div className="h-full bg-gradient-to-r from-sky-400 to-sky-500" style={{ width: `${maleWidth}%` }} />
+                        <div className="h-full bg-gradient-to-r from-rose-400 to-rose-500" style={{ width: `${femaleWidth}%` }} />
                       </div>
-                      <div className="mt-2 flex justify-between text-xs text-slate-600">
+                      <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
                         <span>{item.male} male</span>
                         <span>{item.female} female</span>
-                        <span>Avg age {Math.round(item.ages.reduce((sum, age) => sum + age, 0) / Math.max(item.ages.length, 1))}</span>
+                        <span>Avg {Math.round(item.ages.reduce((sum, age) => sum + age, 0) / Math.max(item.ages.length, 1))}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
+            </TileCard>
 
-            <div className="flex flex-col gap-4">
-              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-sky-50/80 p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Dominant profile</p>
-                {topDisease ? (
-                  <>
-                    <h3 className="text-lg font-bold text-slate-900">{topDisease.disease}</h3>
-                    <p className="text-sm text-slate-600">
-                      Highest incidence with {topDisease.male >= topDisease.female ? 'male' : 'female'} patients and median age{' '}
-                      {Math.round(topDisease.ages.sort((a, b) => a - b)[Math.floor(topDisease.ages.length / 2)])}.
-                    </p>
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
-                      <div className="rounded-xl bg-white/80 p-3 shadow-inner">
-                        <p className="text-xl font-bold text-slate-900">{topDisease.total}</p>
-                        <p>Visits</p>
-                      </div>
-                      <div className="rounded-xl bg-white/80 p-3 shadow-inner">
-                        <p className="text-xl font-bold text-slate-900">{topDisease.male}</p>
-                        <p>Male</p>
-                      </div>
-                      <div className="rounded-xl bg-white/80 p-3 shadow-inner">
-                        <p className="text-xl font-bold text-slate-900">{topDisease.female}</p>
-                        <p>Female</p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-sm text-slate-500">No active data after filters.</p>
-                )}
+            <TileCard className="lg:col-span-2" tone="sky">
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <span>Quick filters</span>
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] text-slate-700">Mini controls</span>
               </div>
-
-              <div className="rounded-3xl border border-slate-100 bg-white/90 p-5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Comparison</p>
-                    <h3 className="text-lg font-bold text-slate-900">Month-over-month disease change</h3>
-                  </div>
-                  <select
-                    value={compareDisease}
-                    onChange={(event) => setCompareDisease(event.target.value)}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
-                  >
-                    {diseaseNames.map((name) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={`flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/90 px-3 py-2 ${SHADOWS.inset}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-slate-500">
+                    <path d="M10 21h4" />
+                    <path d="M12 17v4" />
+                    <path d="m7 13-1-1a2 2 0 0 1 2-3h1.5" />
+                    <path d="M10 5a2 2 0 1 1 4 0v7a2 2 0 1 1-4 0Z" />
+                  </svg>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search disease or family"
+                    className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                  />
                 </div>
-                <div className="mt-3 rounded-2xl border border-slate-100 bg-gradient-to-r from-sky-50 to-cyan-50 p-4 shadow-inner">
-                  <div className="grid grid-cols-3 gap-4 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900">{comparison.latestCount}</p>
-                      <p>{comparison.latest ? monthName(comparison.latest) : 'Latest month'}</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900">{comparison.prevCount}</p>
-                      <p>{comparison.previous ? monthName(comparison.previous) : 'Prev month'}</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900">{comparison.delta >= 0 ? '+' : ''}{comparison.delta}</p>
-                      <p>Change ({comparison.percentageChange}% )</p>
-                    </div>
+                <select
+                  value={gender}
+                  onChange={(event) => setGender(event.target.value as 'all' | 'Male' | 'Female')}
+                  className="rounded-2xl border border-slate-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+                >
+                  <option value="all">All genders</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+                <select
+                  value={family}
+                  onChange={(event) => setFamily(event.target.value)}
+                  className="rounded-2xl border border-slate-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+                >
+                  <option value="all">All families</option>
+                  {families.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={disease}
+                  onChange={(event) => setDisease(event.target.value)}
+                  className="rounded-2xl border border-slate-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+                >
+                  <option value="all">All diseases</option>
+                  {diseaseNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={month}
+                  onChange={(event) => setMonth(event.target.value)}
+                  className="rounded-2xl border border-slate-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+                >
+                  <option value="all">All months</option>
+                  {months.map((monthKey) => (
+                    <option key={monthKey} value={monthKey}>
+                      {monthName(monthKey)}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center justify-between rounded-2xl bg-white/90 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 ring-1 ring-slate-100">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-sky-500 shadow-[0_0_0_6px_rgba(14,165,233,0.18)]" />
+                    Live tiles
                   </div>
-                  <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500"
-                      style={{ width: `${Math.min(100, Math.max(0, comparison.percentageChange + 100)) / 2}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">Quickly compare how {comparison.targetDisease} shifted month to month.</p>
+                  <span className="rounded-full bg-slate-900/90 px-2 py-1 text-[10px] text-white">{filteredRecords.length} results</span>
                 </div>
               </div>
-            </div>
+            </TileCard>
           </div>
-        </section>
-
-        <section className={`ios-surface ${SHADOWS.card} p-6 md:p-7`}>
-          <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-            <div className="rounded-3xl border border-slate-100 bg-white/90 p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Monthly trending</p>
-                  <h3 className="text-lg font-bold text-slate-900">Disease flow by month</h3>
-                  <p className="text-sm text-slate-600">Hover the bars to see month-wise counts.</p>
-                </div>
-                <div className="rounded-full bg-slate-900/90 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white shadow-lg shadow-slate-300">
-                  {disease === 'all' ? 'All diseases' : disease}
-                </div>
-              </div>
-              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {monthlyTrend.map((item) => (
-                  <div key={item.month} className="rounded-2xl border border-slate-100 bg-gradient-to-br from-sky-50/70 to-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
-                      <span>{monthName(item.month)}</span>
-                      <span className="rounded-full bg-slate-900/80 px-2 py-1 text-white">{item.count}</span>
-                    </div>
-                    <div className="mt-3 h-28 rounded-xl bg-slate-100">
-                      <div
-                        className="h-full rounded-xl bg-gradient-to-t from-sky-500 via-cyan-400 to-emerald-300"
-                        style={{ height: `${Math.min(100, item.count * 18)}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-xs text-slate-500">{item.count} cases recorded</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <div className="rounded-3xl border border-slate-100 bg-white/90 p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Advanced filters</p>
-                <h3 className="text-lg font-bold text-slate-900">Make it yours</h3>
-                <div className="mt-3 space-y-3 text-sm text-slate-700">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                    <div>
-                      <p className="font-semibold">Source split</p>
-                      <p className="text-xs text-slate-500">Clinic vs outside referrals</p>
-                    </div>
-                    <div className="flex gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
-                      <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-700">
-                        Clinic {filteredRecords.filter((item) => item.source === 'Clinic').length}
-                      </span>
-                      <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700">
-                        Outside {filteredRecords.filter((item) => item.source === 'Outside').length}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                    <p className="font-semibold">Family penetration</p>
-                    <p className="text-xs text-slate-500">
-                      {toPercentage(activeFamilies.size, allFamilies.size)}% of families touched; drill down by selecting a family above.
-                    </p>
-                    <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500"
-                        style={{ width: `${toPercentage(activeFamilies.size, allFamilies.size)}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                    <p className="font-semibold">Customization tips</p>
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-600">
-                      <li>Use search to narrow by patient name, disease, or family.</li>
-                      <li>Apply gender/month filters to understand seasonality and demographics.</li>
-                      <li>Download the JSON report to embed insights into your clinic documentation.</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-sky-500 to-cyan-500 p-5 text-white shadow-lg shadow-sky-200">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">Search & compare</p>
-                <h3 className="text-xl font-bold">Answer custom questions fast</h3>
-                <p className="mt-2 text-sm text-white/90">
-                  Try queries like “fever in June vs May” or “female hypertension cases”. Filters, comparisons, and exports are all
-                  tuned for the doctor to get instant clarity.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+        </div>
       </main>
     </NavigationPageShell>
   );
